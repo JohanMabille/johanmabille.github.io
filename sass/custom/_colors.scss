@@ -14,9 +14,32 @@
 //$footer-bg-front: image-url('noise.png');
 //$footer-bg-back: linear-gradient(lighten($footer-bg, 8), $footer-bg, darken($footer-bg, 11));
 
+$main-bg: #ffffff;
+$page-bg: #f7f7f7;
+$header-bg: #000000;
+$nav-bg: desaturate(lighten(#318ce7, 18), 5); // bleu roi 
+//$nav-bg: desaturate(lighten(#165b94, 18), 5); // bleu lien
+
+$border-ep: #e0e0e0;
+html
+{
+    background: $page-bg !important;
+}
+
+#main
+{
+	border-left: 1px solid $border-ep;
+  	border-right: 1px solid $border-ep;
+  	border-bottom: 1px solid $border-ep;
+}
+
+body > footer
+{
+	background: $page-bg !important;
+}
 
 /* To use the light Solarized highlighting theme uncomment the following line */
-$solarized: light;
+//$solarized: light;
 
 /* If you want to tweak the Solarized colors you can do that here */
 //$base03:          #002b36; //darkest blue
@@ -41,3 +64,6 @@ $solarized: light;
 //$pre-bg: $base03;
 //$pre-border: darken($base02, 5);
 //$pre-color: $base1;
+
+
+
