@@ -1,0 +1,368 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Writing C++ Wrappers for SIMD Intrinsics (2) - The C++ scientist</title>
+  <meta name="author" content="Johan Mabille">
+
+  
+  <meta name="description" content="1. SSE/AVX intrinsics Before we start to write any code, we need to take a look at the instrinsics the compiler provides, and how things are &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://jmabille.github.io/blog/2014/10/10/writing-c-plus-plus-wrappers-for-simd-intrinsics-2">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="The C++ scientist" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">The C++ scientist</a></h1>
+  
+    <h2>Scientific computing, numerical methods and optimization in C++</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:jmabille.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Writing C++ Wrappers for SIMD Intrinsics (2)</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-10-10T00:54:37+02:00" pubdate data-updated="true">Oct 10<span>th</span>, 2014</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h2 id="a-namesection1a1-sseavx-intrinsics"><a name="section_1"></a>1. SSE/AVX intrinsics</h2>
+
+<p>Before we start to write any code, we need to take a look at the instrinsics the compiler provides, and how things are
+organized. For the rest of this article and the following ones, I assume we use an Intel processor, recent enough to
+provide SSE 4 and AVX; the compiler can be gcc or MSVC, the instrinsics they provide are almost the same.</p>
+
+<p>If you already know about SSE / AVX intrinsics you can skip this section.
+<!-- more --></p>
+
+<h3 id="registers">1.1 Registers</h3>
+
+<p>SSE uses eight 128 bits registers, from xmm0 to xmm7; Intel and AMD 64 bits extensions adds eight more registers, from
+xmm8 to xmm15; thus SSE intrinsics can perform on 4 packed float, 2 packed double, 4 32-bits integers, etc …</p>
+
+<p>With AVX, the width of the SIMD registers is increased from 128 to 256 bits; the register are renamed from xmm0-xmm7
+to ymm0-ymm7 (and from xmm8-xmm15 to ymm8 to ymm15); however legacy sse instructions still can be used, and xmm
+registers can still be addressed since they’re the lower part of ymm registers.</p>
+
+<p>AVX512 will increase the width of the SIMD registers from 256 to 512 bits.</p>
+
+<h3 id="files-to-include">1.2 Files to include</h3>
+
+<p>The intrinsic functions are splitted among different files, depending on the version of the SIMD instruction set they
+belong to :</p>
+
+<ul>
+  <li>&lt;xmmintrin.h&gt; : SSE, operations on 4 single precision floating point numbers (float).</li>
+  <li>&lt;emmintrin.h&gt; : SSE 2, operations on integers and on 2 double precision floating point numbers (double).</li>
+  <li>&lt;pmmintrin.h&gt; : SSE 3, horizontal operations on SIMD registers.</li>
+  <li>&lt;tmmintrin.h&gt; : SSSE 3, additional instructions.</li>
+  <li>&lt;smmintrin.h&gt; : SSE 4.1, dot product and many operations on integers</li>
+  <li>&lt;nmmintrin.h&gt; : SSE 4.2, additional instructions.</li>
+  <li>&lt;immintrin.h&gt; : AVX, operations on integers, 8 float or 4 double.</li>
+</ul>
+
+<p>Each of these files includes the previous one, so you only have to include the one matching the highest version of the SIMD
+instruction set available in your processor. Later we’ll see how to detect at compile time which version on SIMD instruction
+set is available and thus which file to include. For now, just assume we’re able to include the right file each time we need it.</p>
+
+<h3 id="naming-rules">1.3 Naming rules</h3>
+
+<p>Now if you take a look at these files, you’ll notice provided data and functions follow some naming rules :</p>
+
+<ul>
+  <li>data vectors are named <strong>__mXXX(T)</strong>, where :
+    <ul>
+      <li>XXX is the number of bits of the vector (128 for SSE, 256 for AVX)</li>
+      <li>is T a character for the type of the data; T is omitted for float, i fot integers and d for double; thus __m128d is the
+  data vector to use when performing SSE instructions on double.</li>
+    </ul>
+  </li>
+  <li>intrinsic functions operating on floating point numbers are usually named <strong>_mm(XXX)_NAME_PT</strong>, where :
+    <ul>
+      <li>XXX is the number of bits of the SIMD registers; it is omitted for 128 bits regusters</li>
+      <li>NAME is the short name of the function (add, sub, cmp, …)</li>
+      <li>P indicates whether the functions operates on a packed data vector (p) or on a scalar only (s)</li>
+      <li>T indicates the type of the floating point numbers : s for single precision, d for double precision</li>
+    </ul>
+  </li>
+  <li>intrinsic functions operating on integers are usually named <strong>_mm(XXX)_NAME_EPSYY</strong>, where :
+    <ul>
+      <li>XXX is the number of bits of the SIMD registers; it is omitted for 128 bits registers</li>
+      <li>NAME is the short name of the function (add, sub, cmp)</li>
+      <li>S indicates whether the integers are signed (i) or unsigned (u)</li>
+      <li>YY is the number of bits of the integer</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="intrinsics-categories">1.4 Intrinsics categories</h3>
+
+<p>Intrinsics encompass a wide set of features; we can distinguish the following categories (not exhausive) :</p>
+
+<ul>
+  <li>Arithmetic : _mm_add_xx, _mm_sub_xx, _mm_mul_xx, _mm_div_xx, …</li>
+  <li>Logical : _mm_and_xx, _mm_or_xx, _mm_xor_xx, …</li>
+  <li>Comparison : _mm_cmpeq_xx, _mm_cmpneq_xx, _mm_cmplt_xx, …</li>
+  <li>Conversion : _mm_cvtepixx, …</li>
+  <li>Memory move : _mm_load_xx, _mm_store_xx, …</li>
+  <li>Setting : _mm_set_xx, _mm_setzero_xx, …</li>
+</ul>
+
+<p>Some intrinsics won’t be wrapped, and some of them will bu used only to build higher level functions in the wrappers.</p>
+
+<h3 id="sample-code">1.5 Sample code</h3>
+
+<p>Now you know a little more about SSE and AVX intrinsics, you may reconsider the need for wrapping them; indeed, if you don’t need
+to handle other instructions set, you could think of using SSE/AVX intrinsics directly. I hope this sample code will make you
+change your mind :</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>SSE_sample.cpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+</pre></td>
+  <td class="code"><pre>
+<span class="comment">// computes e = a*b + c*d using SSE where a, b, c, d and e are vector of floats</span>
+<span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &lt; e.size(); i += <span class="integer">4</span>)
+{
+    __m128 val = _mm_add_ps(_mm_mul_ps(_mm_load_ps(&amp;a[i]),_mm_load_ps(&amp;b[i])),
+                            _mm_mul_ps(_mm_load_ps(&amp;c[i]),_mm_load_ps(&amp;d[i])));
+    _mm_store_ps(&amp;e[i],val);
+}
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+<p>Quite hard to read, right ? And this is just for two multiplications and one addition; imagine using intrinsics in a huge amount of code,
+and you’ll get code really hard to understand and to maintain. What we need is a way to use __m128 with traditional arithmetic
+operators, as we do with float :</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>wrapped_sample.cpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+</pre></td>
+  <td class="code"><pre>
+<span class="comment">// computes e = a*b + c*d using SSE where a, b, c, d and e are vector of floats</span>
+<span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &lt; e.size(); i += <span class="integer">4</span>)
+{
+    __m128 val = load(&amp;a[i]) * load(&amp;b[i]) + load(&amp;c[i]) * load(&amp;d[i]);
+    store(&amp;e[i],val);
+}
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+<p>That’s the aim of the wrappers we start to write in the next section.</p>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Johan Mabille</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-10-10T00:54:37+02:00" pubdate data-updated="true">Oct 10<span>th</span>, 2014</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/simd/'>SIMD</a>, <a class='category' href='/blog/categories/vectorization/'>Vectorization</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2014/10/09/writing-c-plus-plus-wrappers-for-simd-intrinsics-1/" title="Previous Post: Writing C++ wrappers for SIMD intrinsics (1)">&laquo; Writing C++ wrappers for SIMD intrinsics (1)</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2014/10/10/writing-c-plus-plus-wrappers-for-simd-intrinsics-3/" title="Next Post: Writing C++ Wrappers for SIMD Intrinsics (3)">Writing C++ Wrappers for SIMD Intrinsics (3) &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2014/10/10/writing-c-plus-plus-wrappers-for-simd-intrinsics-3/">Writing C++ Wrappers for SIMD Intrinsics (3)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/10/10/writing-c-plus-plus-wrappers-for-simd-intrinsics-2/">Writing C++ Wrappers for SIMD Intrinsics (2)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/10/09/writing-c-plus-plus-wrappers-for-simd-intrinsics-1/">Writing C++ Wrappers for SIMD Intrinsics (1)</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/jmabille">@jmabille</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'jmabille',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2014 - Johan Mabille -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

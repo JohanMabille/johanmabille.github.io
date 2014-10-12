@@ -5,12 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>The C++ scientist</title>
+  <title>Category: SIMD - The C++ scientist</title>
   <meta name="author" content="Johan Mabille">
 
   
-  <meta name="description" content="2. First version of wrappers Now that we know a little more about SSE and AVX, let’s start writing code; the wrappers will have
-a data vector member &hellip;">
+  <meta name="description" content="Category: SIMD">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -19,7 +18,7 @@ a data vector member &hellip;">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://jmabille.github.io">
+  <link rel="canonical" href="http://jmabille.github.ioblog/categories/simd">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/atom.xml" rel="alternate" title="The C++ scientist" type="application/atom+xml">
@@ -65,157 +64,68 @@ a data vector member &hellip;">
 </nav>
   <div id="main">
     <div id="content">
-      <div class="blog-index">
+      <div>
+<article role="article">
   
-  
-  
-    <article>
-      
   <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/10/10/writing-c-plus-plus-wrappers-for-simd-intrinsics-3/">Writing C++ Wrappers for SIMD Intrinsics (3)</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-10-10T02:35:03+02:00" pubdate data-updated="true">Oct 10<span>th</span>, 2014</time>
-        
-      </p>
+    <h1 class="entry-title">Category: SIMD</h1>
     
   </header>
+  
+  <div id="blog-archives" class="category">
 
 
-  <div class="entry-content"><h2 id="a-namesection2a2-first-version-of-wrappers"><a name="section_2"></a>2. First version of wrappers</h2>
 
-<p>Now that we know a little more about SSE and AVX, let’s start writing code; the wrappers will have
-a data vector member and provide arithmetic, comparison and logical operators overloads. Through this
-section, I will mainly focus on vector4f, the wrapper around __m128, but translating the code for
-other data vectors should not be difficult thanks to the previous section. Since the wrappers will be
-used as numerical types, they must have value semantics, that is they must define copy constructor,
-assignment operator and non-virtual destructor.</p>
+  
+  <h2>2014</h2>
+
+<article>
+  
+<h1><a href="/blog/2014/10/10/writing-c-plus-plus-wrappers-for-simd-intrinsics-3/">Writing C++ Wrappers for SIMD Intrinsics (3)</a></h1>
+<time datetime="2014-10-10T02:35:03+02:00" pubdate><span class='month'>Oct</span> <span class='day'>10</span> <span class='year'>2014</span></time>
+
+<footer>
+  <span class="categories">posted in <a class='category' href='/blog/categories/simd/'>SIMD</a>, <a class='category' href='/blog/categories/vectorization/'>Vectorization</a></span>
+</footer>
+
+
+</article>
+
+
+
+<article>
+  
+<h1><a href="/blog/2014/10/10/writing-c-plus-plus-wrappers-for-simd-intrinsics-2/">Writing C++ Wrappers for SIMD Intrinsics (2)</a></h1>
+<time datetime="2014-10-10T00:54:37+02:00" pubdate><span class='month'>Oct</span> <span class='day'>10</span> <span class='year'>2014</span></time>
+
+<footer>
+  <span class="categories">posted in <a class='category' href='/blog/categories/simd/'>SIMD</a>, <a class='category' href='/blog/categories/vectorization/'>Vectorization</a></span>
+</footer>
+
+
+</article>
+
+
+
+<article>
+  
+<h1><a href="/blog/2014/10/09/writing-c-plus-plus-wrappers-for-simd-intrinsics-1/">Writing C++ Wrappers for SIMD Intrinsics (1)</a></h1>
+<time datetime="2014-10-09T09:10:38+02:00" pubdate><span class='month'>Oct</span> <span class='day'>09</span> <span class='year'>2014</span></time>
+
+<footer>
+  <span class="categories">posted in <a class='category' href='/blog/categories/simd/'>SIMD</a>, <a class='category' href='/blog/categories/vectorization/'>vectorization</a></span>
+</footer>
+
+
+</article>
 
 </div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2014/10/10/writing-c-plus-plus-wrappers-for-simd-intrinsics-3/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/10/10/writing-c-plus-plus-wrappers-for-simd-intrinsics-2/">Writing C++ Wrappers for SIMD Intrinsics (2)</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
 
   
-
-
-<time datetime="2014-10-10T00:54:37+02:00" pubdate data-updated="true">Oct 10<span>th</span>, 2014</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h2 id="a-namesection1a1-sseavx-intrinsics"><a name="section_1"></a>1. SSE/AVX intrinsics</h2>
-
-<p>Before we start to write any code, we need to take a look at the instrinsics the compiler provides, and how things are
-organized. For the rest of this article and the following ones, I assume we use an Intel processor, recent enough to
-provide SSE 4 and AVX; the compiler can be gcc or MSVC, the instrinsics they provide are almost the same.</p>
-
-<p>If you already know about SSE / AVX intrinsics you can skip this section.
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2014/10/10/writing-c-plus-plus-wrappers-for-simd-intrinsics-2/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/10/09/writing-c-plus-plus-wrappers-for-simd-intrinsics-1/">Writing C++ Wrappers for SIMD Intrinsics (1)</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-10-09T09:10:38+02:00" pubdate data-updated="true">Oct 9<span>th</span>, 2014</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h2 id="a-nameintroductionaintroduction"><a name="introduction"></a>Introduction</h2>
-
-<p>SIMD stands for Single Instruction, Mutiple Data, a class of parallel computers which can perform
-the same operation on multiple data points simultaneously. Let’s consider a summation we want to perform
-on two sets of four floating point numbers. The difference bewteen scalar and SIMD operations is illustrated
-below :</p>
-
-<p><img src="/images/simd_scalar.png" alt="simd_scalar" /></p>
+</article>
 
 </div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2014/10/09/writing-c-plus-plus-wrappers-for-simd-intrinsics-1/">Read on &rarr;</a>
-    </footer>
-  
 
-
-    </article>
-  
-  <div class="pagination">
-    
-    <a href="/blog/archives">Blog Archives</a>
-    
-  </div>
-</div>
 <aside class="sidebar">
   
     <section>
@@ -240,7 +150,7 @@ below :</p>
 <section>
   <h1>GitHub Repos</h1>
   <ul id="gh_repos">
-    <li class="loading">Status updating&#8230;</li>
+    <li class="loading">Status updating...</li>
   </ul>
   
   <a href="https://github.com/jmabille">@jmabille</a> on GitHub
@@ -272,6 +182,7 @@ below :</p>
 
   
 </aside>
+
 
     </div>
   </div>

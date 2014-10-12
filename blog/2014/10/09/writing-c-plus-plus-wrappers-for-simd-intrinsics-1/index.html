@@ -1,0 +1,285 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Writing C++ Wrappers for SIMD Intrinsics (1) - The C++ scientist</title>
+  <meta name="author" content="Johan Mabille">
+
+  
+  <meta name="description" content="Introduction SIMD stands for Single Instruction, Mutiple Data, a class of parallel computers which can perform
+the same operation on multiple data &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://jmabille.github.io/blog/2014/10/09/writing-c-plus-plus-wrappers-for-simd-intrinsics-1">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="The C++ scientist" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">The C++ scientist</a></h1>
+  
+    <h2>Scientific computing, numerical methods and optimization in C++</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:jmabille.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Writing C++ Wrappers for SIMD Intrinsics (1)</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-10-09T09:10:38+02:00" pubdate data-updated="true">Oct 9<span>th</span>, 2014</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h2 id="a-nameintroductionaintroduction"><a name="introduction"></a>Introduction</h2>
+
+<p>SIMD stands for Single Instruction, Mutiple Data, a class of parallel computers which can perform
+the same operation on multiple data points simultaneously. Let’s consider a summation we want to perform
+on two sets of four floating point numbers. The difference bewteen scalar and SIMD operations is illustrated
+below :</p>
+
+<p><img src="/images/simd_scalar.png" alt="simd_scalar" /></p>
+
+<!-- more -->
+
+<p>Using scalar operation, four add instructions must be executed one after other to obtain the sums, whereas
+SIMD uses a single instruction to achieve the same result. Thus SIMD operations yield higher efficiency than
+scalar operations.</p>
+
+<p>SIMD instructions were first used in the early 1970s, but began to spread with desktop processors powerful
+enough to support real-time gaming and video processing. Each processor manufacturer has implemented its
+own SIMD instruction set :</p>
+
+<ul>
+  <li>MMX / SSE / AVX (Intel processors)</li>
+  <li>3DNow! (AMD processors)</li>
+  <li>Altivec (Motorola processors)</li>
+  <li>MDMX (MIPS processors)</li>
+</ul>
+
+<p>Many of these instruction set still coexist nowadays, and you have to deal with all of them if you want to write portable
+software. This is a first argument for writing wrappers : capture the abstraction of SIMD operations in nice interfaces,
+and forget about the implementation you rely on.</p>
+
+<p>Although you can write assembly code to use the SIMD instructions, compilers usually provide built-in functions so you
+can use SIMD instructions in C without writing a single line in assembler. These functions (and more generally functions
+whose implementation is handled specially by the compiler) are called intrinsic functions, often shortened to intrinsics.
+Of course the SIMD intrinsics depend on the underlying architecture, and may differ from one compiler to other even for a
+same SIMD instruction set. Fortunately, compilers tend to standardize intrinsics prototype for a given SIMD instruction set,
+and we only have to handle the differences between the various SIMD instruction set.</p>
+
+<p>I’ll focus on wrapping Intel SIMD instruction set through this series of articles, but the wrappers will
+be generic enough so plugging other instruction set is easy.</p>
+
+<p>Since SIMD instructions are longtstanding, you might wonder if writing your own wrapper is relevant; maybe someone
+did it before and there no need to write any code, all you have to do is to reuse existing code. Well, yes and no.</p>
+
+<p><a href="http://www.agner.org/optimize/#vectorclass">Agner Fog</a> has written some very usefull classes that handle Intel SIMD
+instruction set (different versions of SSE and AVX), but he doesn’t make heavy use of metaprogramming in its
+implementation; thus adding a new wrapper (for a new instruction set or a new version of an existing one)
+requires to type a lot of code that could have been factorized. Moreover, some essential tools are missing, such
+as an aligned memory allocator (we’ll see why you need such a tool later). However his library is
+a good point to start.</p>
+
+<p>Another library you might want to consider is the <a href="https://github.com/MetaScale/nt2">Numerical Template Toolbox</a>.
+Although it has a very comprehensive set of mathematical functions, its major drawback is it really slows the
+compilation. More over its development and documentation aren’t finished yet, and it might be difficult to extend it.</p>
+
+<p>And last but not least, writing your own wrapper will make you confront issues specific to SIMD instructions
+and make you understand how it works; thus you will be able to use SIMD intrinsics in a really efficient way, regardless
+of the implementation you choose (your own wrappers or an existing library).</p>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Johan Mabille</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-10-09T09:10:38+02:00" pubdate data-updated="true">Oct 9<span>th</span>, 2014</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/simd/'>SIMD</a>, <a class='category' href='/blog/categories/vectorization/'>vectorization</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+      
+        <a class="basic-alignment right" href="/blog/2014/10/10/writing-c-plus-plus-wrappers-for-simd-intrinsics-2/" title="Next Post: Writing C++ Wrappers for SIMD Intrinsics (2)">Writing C++ Wrappers for SIMD Intrinsics (2) &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2014/10/10/writing-c-plus-plus-wrappers-for-simd-intrinsics-3/">Writing C++ Wrappers for SIMD Intrinsics (3)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/10/10/writing-c-plus-plus-wrappers-for-simd-intrinsics-2/">Writing C++ Wrappers for SIMD Intrinsics (2)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/10/09/writing-c-plus-plus-wrappers-for-simd-intrinsics-1/">Writing C++ Wrappers for SIMD Intrinsics (1)</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/jmabille">@jmabille</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'jmabille',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2014 - Johan Mabille -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

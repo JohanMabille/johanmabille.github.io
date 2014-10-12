@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[The C++ scientist]]></title>
-  <link href="http://jmabille.github.io/atom.xml" rel="self"/>
+  <title><![CDATA[Category: SIMD | The C++ scientist]]></title>
+  <link href="http://jmabille.github.io/blog/categories/simd/atom.xml" rel="self"/>
   <link href="http://jmabille.github.io/"/>
   <updated>2014-10-13T01:48:06+02:00</updated>
   <id>http://jmabille.github.io/</id>
@@ -34,7 +34,7 @@ assignment operator and non-virtual destructor.</p>
 <p>SSE and AVX data vectors can be initialized from different inputs : a single value for all elements,
 a value per element, or another data vector.</p>
 
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>simd_sse.hpp </span></figcaption>
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>simd_sse.hpp </span></figcaption>
  <table class="CodeRay"><tr>
   <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
 <a href="#n2" name="n2">2</a>
@@ -68,41 +68,41 @@ a value per element, or another data vector.</p>
   <td class="code"><pre>
 <span class="keyword">class</span> <span class="class">vector4f</span>
 {
-<span class="directive">public</span>:
+<span class="directive">public</span>:&lt;/p&gt;
 
-    <span class="directive">inline</span> vector4f() {}
-    <span class="directive">inline</span> vector4f(<span class="predefined-type">float</span> f) : m_value(_mm_set1_ps(f)) {}
-    <span class="directive">inline</span> vector4f(<span class="predefined-type">float</span> f0, <span class="predefined-type">float</span> f1, <span class="predefined-type">float</span> f2, <span class="predefined-type">float</span> f3) : m_value(_mm_setr_ps(f0,f1,f2,f3)) {}
-    <span class="directive">inline</span> vector4f(<span class="directive">const</span> __m128&amp; rhs) : m_value(rhs) {}
+&lt;pre&gt;&lt;code&gt;<span class="directive">inline</span> vector4f() {}
+<span class="directive">inline</span> vector4f(<span class="predefined-type">float</span> f) : m_value(_mm_set1_ps(f)) {}
+<span class="directive">inline</span> vector4f(<span class="predefined-type">float</span> f0, <span class="predefined-type">float</span> f1, <span class="predefined-type">float</span> f2, <span class="predefined-type">float</span> f3) : m_value(_mm_setr_ps(f0,f1,f2,f3)) {}
+<span class="directive">inline</span> vector4f(<span class="directive">const</span> __m128&amp;amp; rhs) : m_value(rhs) {}
 
-    <span class="directive">inline</span> vector4f&amp; <span class="directive">operator</span>=(<span class="directive">const</span> __m128&amp; rhs)
-    {
-        m_value = rhs;
-        <span class="keyword">return</span> *<span class="local-variable">this</span>;
-    }
+<span class="directive">inline</span> vector4f&amp;amp; <span class="directive">operator</span>=(<span class="directive">const</span> __m128&amp;amp; rhs)
+{
+    m_value = rhs;
+    <span class="keyword">return</span> *<span class="local-variable">this</span>;
+}
 
-    <span class="directive">inline</span> vector4f(<span class="directive">const</span> vector4f&amp; rhs) : m_value(rhs.m_value) {}
+<span class="directive">inline</span> vector4f(<span class="directive">const</span> vector4f&amp;amp; rhs) : m_value(rhs.m_value) {}
 
-    <span class="directive">inline</span> vector4f&amp; <span class="directive">operator</span>=(<span class="directive">const</span> vector4f&amp; rhs)
-    {
-        m_value = rhs.m_value;
-        <span class="keyword">return</span> *<span class="local-variable">this</span>;
-    }
+<span class="directive">inline</span> vector4f&amp;amp; <span class="directive">operator</span>=(<span class="directive">const</span> vector4f&amp;amp; rhs)
+{
+    m_value = rhs.m_value;
+    <span class="keyword">return</span> *<span class="local-variable">this</span>;
+}
+&lt;/code&gt;&lt;/pre&gt;
 
-<span class="directive">private</span>:
+&lt;p&gt;<span class="directive">private</span>:&lt;/p&gt;
 
-    __m128 m_value;
-};
-</pre></td>
+&lt;pre&gt;&lt;code&gt;__m128 m_value; }; </pre></td>
 </tr></table>
  </figure></notextile></div>
+</code></pre>
 
 <h3 id="implicit-conversion">2.2 Implicit conversion</h3>
 
 <p>The operators overloads have to access the m_value member of the wrapper so they can pass it as an argument to the intrinsic
 functions :</p>
 
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>overload sample</span></figcaption>
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>overload sample</span></figcaption>
  <table class="CodeRay"><tr>
   <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
 <a href="#n2" name="n2">2</a>
@@ -111,13 +111,13 @@ functions :</p>
 <a href="#n5" name="n5">5</a>
 </pre></td>
   <td class="code"><pre>
-vector4f <span class="directive">operator</span>+(<span class="directive">const</span> vector4f&amp; lhs, <span class="directive">const</span> vector4f&amp; rhs)
+vector4f <span class="directive">operator</span>+(<span class="directive">const</span> vector4f&amp;amp; lhs, <span class="directive">const</span> vector4f&amp;amp; rhs)
 {
     <span class="keyword">return</span> _mm_add_ps(lhs.m_value,rhs.m_value);
 }
 </pre></td>
 </tr></table>
- </figure></notextile></div>
+ </figure></notextile></div></p>
 
 <p>We could declare the operator overloads as friend functions of the wrapper class, or provide a get method returning the internal
 m_value. Both of these solutions work, but aren’t elegant : the first requires a huge amount of friend declaration, the second
@@ -127,7 +127,7 @@ produces heavy code unpleasant to read.</p>
 from __m128, we can now use vector4f or __m128 indifferently. Moreover we can save the vector4f copy constructor and assignment
 operator :</p>
 
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>simd_sse.hpp </span></figcaption>
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>simd_sse.hpp </span></figcaption>
  <table class="CodeRay"><tr>
   <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
 <a href="#n2" name="n2">2</a>
@@ -159,32 +159,32 @@ operator :</p>
   <td class="code"><pre>
 <span class="keyword">class</span> <span class="class">vector4f</span>
 {
-<span class="directive">public</span>:
+<span class="directive">public</span>:&lt;/p&gt;
 
-    <span class="directive">inline</span> vector4f() {}
-    <span class="directive">inline</span> vector4f(<span class="predefined-type">float</span> f) : m_value(_mm_set1_ps(f)) {}
-    <span class="directive">inline</span> vector4f(<span class="predefined-type">float</span> f0, <span class="predefined-type">float</span> f1, <span class="predefined-type">float</span> f2, <span class="predefined-type">float</span> f3) : m_value(_mm_setr_ps(f0,f1,f2,f3)) {}
-    <span class="directive">inline</span> vector4f(<span class="directive">const</span> __m128&amp; rhs) : m_value(rhs) {}
+&lt;pre&gt;&lt;code&gt;<span class="directive">inline</span> vector4f() {}
+<span class="directive">inline</span> vector4f(<span class="predefined-type">float</span> f) : m_value(_mm_set1_ps(f)) {}
+<span class="directive">inline</span> vector4f(<span class="predefined-type">float</span> f0, <span class="predefined-type">float</span> f1, <span class="predefined-type">float</span> f2, <span class="predefined-type">float</span> f3) : m_value(_mm_setr_ps(f0,f1,f2,f3)) {}
+<span class="directive">inline</span> vector4f(<span class="directive">const</span> __m128&amp;amp; rhs) : m_value(rhs) {}
 
-    <span class="directive">inline</span> vector4f&amp; <span class="directive">operator</span>=(<span class="directive">const</span> __m128&amp; rhs)
-    {
-        m_value = rhs;
-        <span class="keyword">return</span> *<span class="local-variable">this</span>;
-    }
+<span class="directive">inline</span> vector4f&amp;amp; <span class="directive">operator</span>=(<span class="directive">const</span> __m128&amp;amp; rhs)
+{
+    m_value = rhs;
+    <span class="keyword">return</span> *<span class="local-variable">this</span>;
+}
 
-    <span class="directive">inline</span> <span class="directive">operator</span> __m128() <span class="directive">const</span> { <span class="keyword">return</span> m_value; }
+<span class="directive">inline</span> <span class="directive">operator</span> __m128() <span class="directive">const</span> { <span class="keyword">return</span> m_value; }
 
-    <span class="comment">// vector4f(const vector4f&amp;) and operator=(const vector4f&amp;) are not required anymore :</span>
-    <span class="comment">// the conversion operator will be called before calling vector4f(const __m128&amp;)</span>
-    <span class="comment">// or operator=(const __m128&amp;)</span>
+<span class="comment">// vector4f(const vector4f&amp;amp;) and operator=(const vector4f&amp;amp;) are not required anymore :</span>
+<span class="comment">// the conversion operator will be called before calling vector4f(const __m128&amp;amp;)</span>
+<span class="comment">// or operator=(const __m128&amp;amp;)</span>
+&lt;/code&gt;&lt;/pre&gt;
 
-<span class="directive">private</span>:
+&lt;p&gt;<span class="directive">private</span>:&lt;/p&gt;
 
-    __m128 m_value;
-};
-</pre></td>
+&lt;pre&gt;&lt;code&gt;__m128 m_value; }; </pre></td>
 </tr></table>
  </figure></notextile></div>
+</code></pre>
 
 <h3 id="arithmetic-operators-overloads">2.3 Arithmetic operators overloads</h3>
 
@@ -194,7 +194,7 @@ private members of vector4f ; but since vector4f can be implicitly converted to 
 do the opposite and avoid using a temporary (this won’t have any impact on performance since
 the compiler can optimize it, but produces shorter and more pleasant code to read) :</p>
 
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>simd_sse.hpp </span></figcaption>
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>simd_sse.hpp </span></figcaption>
  <table class="CodeRay"><tr>
   <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
 <a href="#n2" name="n2">2</a>
@@ -218,30 +218,29 @@ the compiler can optimize it, but produces shorter and more pleasant code to rea
   <td class="code"><pre>
 <span class="keyword">class</span> <span class="class">vector4f</span>
 {
-<span class="directive">public</span>:
+<span class="directive">public</span>:&lt;/p&gt;
 
-    <span class="comment">// ...</span>
+&lt;pre&gt;&lt;code&gt;<span class="comment">// ...</span>
 
-    <span class="directive">inline</span> vector4f&amp; <span class="directive">operator</span>+=(<span class="directive">const</span> vector4f&amp; rhs)
-    {
-        *<span class="local-variable">this</span> = *<span class="local-variable">this</span> + rhs;
-        <span class="keyword">return</span> *<span class="local-variable">this</span>;
-    }
-};
+<span class="directive">inline</span> vector4f&amp;amp; <span class="directive">operator</span>+=(<span class="directive">const</span> vector4f&amp;amp; rhs)
+{
+    *<span class="local-variable">this</span> = *<span class="local-variable">this</span> + rhs;
+    <span class="keyword">return</span> *<span class="local-variable">this</span>;
+} };
+&lt;/code&gt;&lt;/pre&gt;
 
-<span class="directive">inline</span> vector4f <span class="directive">operator</span>+(<span class="directive">const</span> vector4f&amp; lhs, <span class="directive">const</span> vector4f&amp; rhs)
+&lt;p&gt;<span class="directive">inline</span> vector4f <span class="directive">operator</span>+(<span class="directive">const</span> vector4f&amp;amp; lhs, <span class="directive">const</span> vector4f&amp;amp; rhs)
 {
     <span class="keyword">return</span> _mm_add_ps(lhs,rhs);
 }
 </pre></td>
 </tr></table>
- </figure></notextile></div>
+ </figure></notextile></div></p>
 
 <h3 id="the-need-for-a-base-class">2.4 The need for a base class</h3>
 
-<p>We could go ahead and write the remaining arithmetic operators overloads, just as we did before :</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>simd_sse.hpp </span></figcaption>
+<p>We could go ahead and write the remaining arithmetic operators overloads, just as we did before :
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>simd_sse.hpp </span></figcaption>
  <table class="CodeRay"><tr>
   <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
 <a href="#n2" name="n2">2</a>
@@ -261,24 +260,24 @@ the compiler can optimize it, but produces shorter and more pleasant code to rea
 <a href="#n16" name="n16">16</a>
 </pre></td>
   <td class="code"><pre>
-vector4f <span class="directive">operator</span>+(<span class="directive">const</span> vector4f&amp;, <span class="directive">const</span> vector4f&amp;);
+vector4f <span class="directive">operator</span>+(<span class="directive">const</span> vector4f&amp;amp;, <span class="directive">const</span> vector4f&amp;amp;);
 <span class="comment">// Adds the same float value to each data vector member</span>
-vector4f <span class="directive">operator</span>+(<span class="directive">const</span> vector4f&amp;, <span class="directive">const</span> <span class="predefined-type">float</span>&amp;);
-vector4f <span class="directive">operator</span>+(<span class="directive">const</span> <span class="predefined-type">float</span>&amp;, <span class="directive">const</span> vector4f&amp;);
+vector4f <span class="directive">operator</span>+(<span class="directive">const</span> vector4f&amp;amp;, <span class="directive">const</span> <span class="predefined-type">float</span>&amp;amp;);
+vector4f <span class="directive">operator</span>+(<span class="directive">const</span> <span class="predefined-type">float</span>&amp;amp;, <span class="directive">const</span> vector4f&amp;amp;);&lt;/p&gt;
 
-<span class="comment">// Similar for operator-, operator* and operator/</span>
-<span class="comment">// ...</span>
+&lt;p&gt;<span class="comment">// Similar for operator-, operator* and operator/</span>
+<span class="comment">// …&lt;/p&gt;</span>
 
-vector4f <span class="directive">operator</span>-(<span class="directive">const</span> vector4f&amp;);
+&lt;p&gt;vector4f <span class="directive">operator</span>-(<span class="directive">const</span> vector4f&amp;amp;);&lt;/p&gt;
 
-vector4f&amp; <span class="directive">operator</span>++();
-vector4f <span class="directive">operator</span>++(<span class="predefined-type">int</span>);
+&lt;p&gt;vector4f&amp;amp; <span class="directive">operator</span>++();
+vector4f <span class="directive">operator</span>++(<span class="predefined-type">int</span>);&lt;/p&gt;
 
-<span class="comment">// Similar for operator--</span>
-<span class="comment">// ...</span>
+&lt;p&gt;<span class="comment">// Similar for operator–</span>
+<span class="comment">// …</span>
 </pre></td>
 </tr></table>
- </figure></notextile></div>
+ </figure></notextile></div></p>
 
 <p>But wait! Whenever you add a new wrapper, you’ll have to write these operators overloads again. Besides
 the fact you’ll type a lot of boilerplate code, computed assignment operators will be the same as those
@@ -298,7 +297,7 @@ at compile time.</p>
 <p>Let’s call our base class simd_vector, it will be used as base class for every wrapper ; here is what it should
 look like :</p>
 
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>simd_base.hpp</span></figcaption>
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>simd_base.hpp</span></figcaption>
  <table class="CodeRay"><tr>
   <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
 <a href="#n2" name="n2">2</a>
@@ -375,90 +374,92 @@ look like :</p>
 <a href="#n73" name="n73">73</a>
 <a href="#n74" name="n74">74</a>
 <a href="#n75" name="n75">75</a>
+<a href="#n76" name="n76">76</a>
 </pre></td>
   <td class="code"><pre>
-<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">X</span>&gt;
-    <span class="keyword">struct</span> simd_vector_traits;
+<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">x</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt;
+    <span class="keyword">struct</span> simd_vector_traits;&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
 
-<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">X</span>&gt;
+&lt;p&gt;<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">x</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt;
     <span class="keyword">class</span> <span class="class">simd_vector</span>
     {
-    <span class="directive">public</span>:
+    <span class="directive">public</span>:&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
 
-        <span class="keyword">typedef</span> <span class="keyword">typename</span> simd_vector_traits&lt;X&gt;::value_type value_type;
+&lt;pre&gt;&lt;code&gt;    <span class="keyword">typedef</span> <span class="keyword">typename</span> simd_vector_traits&amp;lt;X&amp;gt;::value_type value_type;
 
-        <span class="comment">// downcast operators so we can call inherited methods</span>
-        <span class="directive">inline</span> X&amp; <span class="directive">operator</span>()() { <span class="keyword">return</span> *<span class="keyword">static_cast</span>&lt;X*&gt;(<span class="local-variable">this</span>); }
-        <span class="directive">inline</span> <span class="directive">const</span> X&amp; <span class="directive">operator</span>()() <span class="directive">const</span> { <span class="keyword">return</span> *<span class="keyword">static_cast</span>&lt;<span class="directive">const</span> X*&gt;(<span class="local-variable">this</span>); }
+    <span class="comment">// downcast operators so we can call inherited methods</span>
+    <span class="directive">inline</span> X&amp;amp; <span class="directive">operator</span>()() { <span class="keyword">return</span> *<span class="keyword">static_cast</span>&amp;lt;X*&amp;gt;(<span class="local-variable">this</span>); }
+    <span class="directive">inline</span> <span class="directive">const</span> X&amp;amp; <span class="directive">operator</span>()() <span class="directive">const</span> { <span class="keyword">return</span> *<span class="keyword">static_cast</span>&amp;lt;<span class="directive">const</span> X*&amp;gt;(<span class="local-variable">this</span>); }
 
-        <span class="comment">// Additional assignment operators</span>
-        <span class="directive">inline</span> X&amp; <span class="directive">operator</span>+=(<span class="directive">const</span> X&amp; rhs)
-        {
-            (*<span class="local-variable">this</span>)() = (*<span class="local-variable">this</span>)() + rhs;
-            <span class="keyword">return</span> (*<span class="local-variable">this</span>)();
-        }
+    <span class="comment">// Additional assignment operators</span>
+    <span class="directive">inline</span> X&amp;amp; <span class="directive">operator</span>+=(<span class="directive">const</span> X&amp;amp; rhs)
+    {
+        (*<span class="local-variable">this</span>)() = (*<span class="local-variable">this</span>)() + rhs;
+        <span class="keyword">return</span> (*<span class="local-variable">this</span>)();
+    }
 
-        <span class="directive">inline</span> X&amp; <span class="directive">operator</span>+=(<span class="directive">const</span> value_type&amp; rhs)
-        {
-            (*<span class="local-variable">this</span>)() = (*<span class="local-variable">this</span>)() + X(rhs);
-            <span class="keyword">return</span> (*<span class="local-variable">this</span>)();
-        }
+    <span class="directive">inline</span> X&amp;amp; <span class="directive">operator</span>+=(<span class="directive">const</span> value_type&amp;amp; rhs)
+    {
+        (*<span class="local-variable">this</span>)() = (*<span class="local-variable">this</span>)() + X(rhs);
+        <span class="keyword">return</span> (*<span class="local-variable">this</span>)();
+    }
 
-        <span class="comment">// Same for operator-=, operator*=, operator/= ...</span>
-        <span class="comment">// ...</span>
+    <span class="comment">// Same for operator-=, operator*=, operator/= ...</span>
+    <span class="comment">// ...</span>
 
-        <span class="comment">// Increment operators</span>
-        <span class="directive">inline</span> X <span class="directive">operator</span>++(<span class="predefined-type">int</span>)
-        {
-            X tmp = (*<span class="local-variable">this</span>)();
-            (*<span class="local-variable">this</span>) += value_type(<span class="integer">1</span>);
-            <span class="keyword">return</span> tmp;
-        }
+    <span class="comment">// Increment operators</span>
+    <span class="directive">inline</span> X <span class="directive">operator</span>++(<span class="predefined-type">int</span>)
+    {
+        X tmp = (*<span class="local-variable">this</span>)();
+        (*<span class="local-variable">this</span>) += value_type(<span class="integer">1</span>);
+        <span class="keyword">return</span> tmp;
+    }
 
-        <span class="directive">inline</span> X&amp; <span class="directive">operator</span>++()
-        {
-            (*<span class="local-variable">this</span>)() += value_type(<span class="integer">1</span>);
-            <span class="keyword">return</span> (*<span class="local-variable">this</span>)();
-        }
+    <span class="directive">inline</span> X&amp;amp; <span class="directive">operator</span>++()
+    {
+        (*<span class="local-variable">this</span>)() += value_type(<span class="integer">1</span>);
+        <span class="keyword">return</span> (*<span class="local-variable">this</span>)();
+    }
 
-        <span class="comment">// Similar decrement operators</span>
-        <span class="comment">// ...</span>
+    <span class="comment">// Similar decrement operators</span>
+    <span class="comment">// ...</span>
 
-    <span class="directive">protected</span>:
+<span class="directive">protected</span>:
 
-        <span class="comment">// Ensure only inheriting classes can instantiate / copy / assign simd_vector.</span>
-        <span class="comment">// Avoids incomplete copy / assignment from client code.</span>
-        <span class="directive">inline</span> simd_vector() {}
-        <span class="directive">inline</span> ~simd_vector() {}
+    <span class="comment">// Ensure only inheriting classes can instantiate / copy / assign simd_vector.</span>
+    <span class="comment">// Avoids incomplete copy / assignment from client code.</span>
+    <span class="directive">inline</span> simd_vector() {}
+    <span class="directive">inline</span> ~simd_vector() {}
 
-        <span class="directive">inline</span> simd_vector(<span class="directive">const</span> simd_vector&amp;) {}
-        <span class="directive">inline</span> simd_vector&amp; <span class="directive">operator</span>=(<span class="directive">const</span>  simd_vector&amp;) { <span class="keyword">return</span> *<span class="local-variable">this</span>; }
-    };
+    <span class="directive">inline</span> simd_vector(<span class="directive">const</span> simd_vector&amp;amp;) {}
+    <span class="directive">inline</span> simd_vector&amp;amp; <span class="directive">operator</span>=(<span class="directive">const</span>  simd_vector&amp;amp;) { <span class="keyword">return</span> *<span class="local-variable">this</span>; }
+};
+&lt;/code&gt;&lt;/pre&gt;
 
-<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">X</span>&gt;
-    <span class="directive">inline</span> simd_vector&lt;X&gt; <span class="directive">operator</span>+(<span class="directive">const</span> simd_vector&lt;X&gt;&amp; lhs,
-                                    <span class="directive">const</span> <span class="keyword">typename</span> simd_vector_traits&lt;X&gt;::type&amp; rhs)
+&lt;p&gt;<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">x</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt;
+    <span class="directive">inline</span> simd_vector&lt;x&gt; <span class="directive">operator</span>+(<span class="directive">const</span> simd_vector&lt;x&gt;&amp;amp; lhs,
+                                    <span class="directive">const</span> <span class="keyword">typename</span> simd_vector_traits&lt;x&gt;::type&amp;amp; rhs)
     {
         <span class="keyword">return</span> lhs() + X(rhs);
-    }
+    }&lt;/x&gt;&lt;/x&gt;&lt;/x&gt;&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
 
-<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">X</span>&gt;
-    <span class="directive">inline</span> simd_vector&lt;X&gt; <span class="directive">operator</span>+(<span class="directive">const</span> <span class="keyword">typename</span> simd_vector_traits&lt;X&gt;::type&amp; lhs,
-                                    <span class="directive">const</span> simd_vector&lt;X&gt;&amp; rhs)
+&lt;p&gt;<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">x</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt;
+    <span class="directive">inline</span> simd_vector&lt;x&gt; <span class="directive">operator</span>+(<span class="directive">const</span> <span class="keyword">typename</span> simd_vector_traits&lt;x&gt;::type&amp;amp; lhs,
+                                    <span class="directive">const</span> simd_vector&lt;x&gt;&amp;amp; rhs)
     {
         <span class="keyword">return</span> X(lhs) + rhs();
-    }
+    }&lt;/x&gt;&lt;/x&gt;&lt;/x&gt;&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
 
-<span class="comment">// Same for operator-, operator*, operator/</span>
-<span class="comment">// ...</span>
+&lt;p&gt;<span class="comment">// Same for operator-, operator*, operator/</span>
+<span class="comment">// …</span>
 </pre></td>
 </tr></table>
- </figure></notextile></div>
+ </figure></notextile></div></p>
 
 <p>Now, all vector4f needs to do is to inherit from simd_vector and implement the traditional operator+, and
 it will get operator+= and the operator+ overloads for free (and the same for other arithmetic operators) :</p>
 
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>simd_sse.hpp </span></figcaption>
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>simd_sse.hpp </span></figcaption>
  <table class="CodeRay"><tr>
   <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
 <a href="#n2" name="n2">2</a>
@@ -511,61 +512,63 @@ it will get operator+= and the operator+ overloads for free (and the same for ot
 <a href="#n49" name="n49">49</a>
 <strong><a href="#n50" name="n50">50</a></strong>
 <a href="#n51" name="n51">51</a>
+<a href="#n52" name="n52">52</a>
 </pre></td>
   <td class="code"><pre>
 <span class="keyword">class</span> <span class="class">vector4f</span> : <span class="directive">public</span> simd_vector&lt;vector4f&gt;
 {
-<span class="directive">public</span>:
+<span class="directive">public</span>:&lt;/vector4f&gt;&lt;/p&gt;
 
-    <span class="directive">inline</span> vector4f() {}
-    <span class="directive">inline</span> vector4f(<span class="predefined-type">float</span> f) : m_value(_mm_set1_ps(f)) {}
-    <span class="directive">inline</span> vector4f(<span class="predefined-type">float</span> f0, <span class="predefined-type">float</span> f1, <span class="predefined-type">float</span> f2, <span class="predefined-type">float</span> f3) : m_value(_mm_setr_ps(f0,f1,f2,f3)) {}
-    <span class="directive">inline</span> vector4f(<span class="directive">const</span> __m128&amp; rhs) : m_value(rhs) {}
+&lt;pre&gt;&lt;code&gt;<span class="directive">inline</span> vector4f() {}
+<span class="directive">inline</span> vector4f(<span class="predefined-type">float</span> f) : m_value(_mm_set1_ps(f)) {}
+<span class="directive">inline</span> vector4f(<span class="predefined-type">float</span> f0, <span class="predefined-type">float</span> f1, <span class="predefined-type">float</span> f2, <span class="predefined-type">float</span> f3) : m_value(_mm_setr_ps(f0,f1,f2,f3)) {}
+<span class="directive">inline</span> vector4f(<span class="directive">const</span> __m128&amp;amp; rhs) : m_value(rhs) {}
 
-    <span class="directive">inline</span> vector4f&amp; <span class="directive">operator</span>=(<span class="directive">const</span> __m128&amp; rhs)
-    {
-        m_value = rhs;
-        <span class="keyword">return</span> *<span class="local-variable">this</span>;
-    }
+<span class="directive">inline</span> vector4f&amp;amp; <span class="directive">operator</span>=(<span class="directive">const</span> __m128&amp;amp; rhs)
+{
+    m_value = rhs;
+    <span class="keyword">return</span> *<span class="local-variable">this</span>;
+}
 
-    <span class="directive">inline</span> <span class="directive">operator</span> __m128() <span class="directive">const</span> { <span class="keyword">return</span> m_value; }
+<span class="directive">inline</span> <span class="directive">operator</span> __m128() <span class="directive">const</span> { <span class="keyword">return</span> m_value; }
 
-    <span class="comment">// No more operator+= since it is implemented in the base class</span>
+<span class="comment">// No more operator+= since it is implemented in the base class</span>
+&lt;/code&gt;&lt;/pre&gt;
 
-<span class="directive">private</span>:
+&lt;p&gt;<span class="directive">private</span>:&lt;/p&gt;
 
-    __m128 m_value;
-};
+&lt;pre&gt;&lt;code&gt;__m128 m_value; };
+&lt;/code&gt;&lt;/pre&gt;
 
-<span class="comment">// Base on this operator implementation, simd_vector&lt;vector4f&gt; will generate</span>
+&lt;p&gt;<span class="comment">// Base on this operator implementation, simd_vector&lt;vector4f&gt; will generate</span>
 <span class="comment">// the following methods and overloads :</span>
-<span class="comment">// vector4f&amp; operator+=(const vector4f&amp;)</span>
+<span class="comment">// vector4f&amp;amp; operator+=(const vector4f&amp;amp;)</span>
 <span class="comment">// vector4f operator++(int)</span>
-<span class="comment">// vector4f&amp; operator++()</span>
-<span class="comment">// vector4f operator+(const vector4f&amp;, ocnst float&amp;)</span>
-<span class="comment">// vector4f operator+(const float&amp;, const vector4f&amp;)</span>
-<span class="directive">inline</span> vector4f <span class="directive">operator</span>+(<span class="directive">const</span> vector4f&amp; lhs, <span class="directive">const</span> vector4f&amp; rhs)
+<span class="comment">// vector4f&amp;amp; operator++()</span>
+<span class="comment">// vector4f operator+(const vector4f&amp;amp;, ocnst float&amp;amp;)</span>
+<span class="comment">// vector4f operator+(const float&amp;amp;, const vector4f&amp;amp;)</span>
+<span class="directive">inline</span> vector4f <span class="directive">operator</span>+(<span class="directive">const</span> vector4f&amp;amp; lhs, <span class="directive">const</span> vector4f&amp;amp; rhs)
 {
     <span class="keyword">return</span> _mm_add_ps(lhs,rhs);
-}
+}&lt;/vector4f&gt;&lt;/p&gt;
 
-<span class="directive">inline</span> vector4f <span class="directive">operator</span>-(<span class="directive">const</span> vector4f&amp; lhs, <span class="directive">const</span> vector4f&amp; rhs)
+&lt;p&gt;<span class="directive">inline</span> vector4f <span class="directive">operator</span>-(<span class="directive">const</span> vector4f&amp;amp; lhs, <span class="directive">const</span> vector4f&amp;amp; rhs)
 {
     <span class="keyword">return</span> _mm_sub_ps(lhs,rhs);
-}
+}&lt;/p&gt;
 
-<span class="directive">inline</span> vector4f <span class="directive">operator</span>*(<span class="directive">const</span> vector4f&amp; lhs, <span class="directive">const</span> vector4f&amp; rhs)
+&lt;p&gt;<span class="directive">inline</span> vector4f <span class="directive">operator</span>*(<span class="directive">const</span> vector4f&amp;amp; lhs, <span class="directive">const</span> vector4f&amp;amp; rhs)
 {
     <span class="keyword">return</span> _mm_mul_ps(lhs,rhs);
-}
+}&lt;/p&gt;
 
-<span class="directive">inline</span> vector4f <span class="directive">operator</span>/(<span class="directive">const</span> vetcor4f&amp; lhs, <span class="directive">const</span> vector4f&amp; rhs)
+&lt;p&gt;<span class="directive">inline</span> vector4f <span class="directive">operator</span>/(<span class="directive">const</span> vetcor4f&amp;amp; lhs, <span class="directive">const</span> vector4f&amp;amp; rhs)
 {
     <span class="keyword">return</span> _mm_div_ps(lhs,rhs);
 }
 </pre></td>
 </tr></table>
- </figure></notextile></div>
+ </figure></notextile></div></p>
 
 <p>Looks good, doesn’t it ? Every time we want to implement a new wrapper, we only have to code 4 operators and
 make our class inherit from simd_vector, and all overloads will be generated for free!</p>
@@ -591,7 +594,7 @@ base class for common code, and inheriting classes for specific implementation. 
 of the simd_vector_bool class, the base used to generate bitwise assignment operators and logical operators
 overloads in inheriting classes :</p>
 
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>simd_base.hpp </span></figcaption>
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>simd_base.hpp </span></figcaption>
  <table class="CodeRay"><tr>
   <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
 <a href="#n2" name="n2">2</a>
@@ -655,76 +658,78 @@ overloads in inheriting classes :</p>
 <strong><a href="#n60" name="n60">60</a></strong>
 <a href="#n61" name="n61">61</a>
 <a href="#n62" name="n62">62</a>
+<a href="#n63" name="n63">63</a>
 </pre></td>
   <td class="code"><pre>
-<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">X</span>&gt;
+<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">x</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt;
     <span class="keyword">class</span> <span class="class">simd_vector_bool</span>
     {
-    <span class="directive">public</span>:
+    <span class="directive">public</span>:&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
 
-        <span class="directive">inline</span> X&amp; <span class="directive">operator</span>()() { <span class="keyword">return</span> *<span class="keyword">static_cast</span>&lt;X*&gt;(<span class="local-variable">this</span>); }
-        <span class="directive">inline</span> <span class="directive">const</span> X&amp; <span class="directive">operator</span>()() <span class="directive">const</span> { <span class="keyword">return</span> *<span class="keyword">static_cast</span>&lt;<span class="directive">const</span> X*&gt;(<span class="local-variable">this</span>); }
+&lt;pre&gt;&lt;code&gt;    <span class="directive">inline</span> X&amp;amp; <span class="directive">operator</span>()() { <span class="keyword">return</span> *<span class="keyword">static_cast</span>&amp;lt;X*&amp;gt;(<span class="local-variable">this</span>); }
+    <span class="directive">inline</span> <span class="directive">const</span> X&amp;amp; <span class="directive">operator</span>()() <span class="directive">const</span> { <span class="keyword">return</span> *<span class="keyword">static_cast</span>&amp;lt;<span class="directive">const</span> X*&amp;gt;(<span class="local-variable">this</span>); }
 
-        <span class="directive">inline</span> X&amp; <span class="directive">operator</span>&amp;=(<span class="directive">const</span> X&amp; rhs)
-        {
-            (*<span class="local-variable">this</span>) = (*<span class="local-variable">this</span>) &amp;&amp; rhs;
-            <span class="keyword">return</span> (*<span class="local-variable">this</span>)();
-        }
-
-        <span class="directive">inline</span> X&amp; <span class="directive">operator</span>|(<span class="directive">const</span> X&amp; rhs)
-        {
-            (*<span class="local-variable">this</span>)() = (*<span class="local-variable">this</span>) || rhs;
-            <span class="keyword">return</span> (*<span class="local-variable">this</span>)();
-        }
-
-        <span class="directive">inline</span> X&amp; <span class="directive">operator</span>^=(<span class="directive">const</span> X&amp; rhs)
-        {
-            (*<span class="local-variable">this</span>)() = (*<span class="local-variable">this</span>)() ^ rhs;
-            <span class="keyword">return</span> (*<span class="local-variable">this</span>)();
-        }
-
-    <span class="directive">protected</span>:
-
-        <span class="directive">inline</span> simd_vector_bool() {}
-        <span class="directive">inline</span> ~simd_vector_bool() {}
-
-        <span class="directive">inline</span> simd_vector_bool(<span class="directive">const</span> simd_vector_bool&amp;) {}
-        <span class="directive">inline</span> simd_vector_bool&amp; <span class="directive">operator</span>=(<span class="directive">const</span> simd_vector_bool&amp;) { <span class="keyword">return</span> *<span class="local-variable">this</span>; }
-    };
-
-<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">X</span>&gt;
-    <span class="directive">inline</span> X <span class="directive">operator</span>&amp;&amp;(<span class="directive">const</span> simd_vector_bool&lt;X&gt;&amp; lhs, <span class="directive">const</span> simd_vector_bool&lt;X&gt;&amp; rhs)
+    <span class="directive">inline</span> X&amp;amp; <span class="directive">operator</span>&amp;amp;=(<span class="directive">const</span> X&amp;amp; rhs)
     {
-        <span class="keyword">return</span> lhs() &amp; rhs();
+        (*<span class="local-variable">this</span>) = (*<span class="local-variable">this</span>) &amp;amp;&amp;amp; rhs;
+        <span class="keyword">return</span> (*<span class="local-variable">this</span>)();
     }
 
-<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">X</span>&gt;
-    <span class="directive">inline</span> X <span class="directive">operator</span>&amp;&amp;(<span class="directive">const</span> simd_vector_bool&lt;X&gt;&amp; lhs, <span class="predefined-type">bool</span> rhs)
+    <span class="directive">inline</span> X&amp;amp; <span class="directive">operator</span>|(<span class="directive">const</span> X&amp;amp; rhs)
     {
-        <span class="keyword">return</span> lhs() &amp; rhs;
+        (*<span class="local-variable">this</span>)() = (*<span class="local-variable">this</span>) || rhs;
+        <span class="keyword">return</span> (*<span class="local-variable">this</span>)();
     }
 
-<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">X</span>&gt;
-    <span class="directive">inline</span> X <span class="directive">operator</span>||(<span class="predefined-type">bool</span> lhs, <span class="directive">const</span> simd_vector_bool&lt;X&gt;&amp; rhs)
+    <span class="directive">inline</span> X&amp;amp; <span class="directive">operator</span>^=(<span class="directive">const</span> X&amp;amp; rhs)
     {
-        <span class="keyword">return</span> lhs &amp; rhs();
+        (*<span class="local-variable">this</span>)() = (*<span class="local-variable">this</span>)() ^ rhs;
+        <span class="keyword">return</span> (*<span class="local-variable">this</span>)();
     }
 
-<span class="comment">// Similar for operator|| overloads</span>
-<span class="comment">// ...</span>
+<span class="directive">protected</span>:
 
-<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">X</span>&gt;
-    <span class="directive">inline</span> X <span class="directive">operator</span>!(<span class="directive">const</span> simd_vector_bool&lt;X&gt;&amp; rhs)
+    <span class="directive">inline</span> simd_vector_bool() {}
+    <span class="directive">inline</span> ~simd_vector_bool() {}
+
+    <span class="directive">inline</span> simd_vector_bool(<span class="directive">const</span> simd_vector_bool&amp;amp;) {}
+    <span class="directive">inline</span> simd_vector_bool&amp;amp; <span class="directive">operator</span>=(<span class="directive">const</span> simd_vector_bool&amp;amp;) { <span class="keyword">return</span> *<span class="local-variable">this</span>; }
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">x</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt;
+    <span class="directive">inline</span> X <span class="directive">operator</span>&amp;amp;&amp;amp;(<span class="directive">const</span> simd_vector_bool&lt;x&gt;&amp;amp; lhs, <span class="directive">const</span> simd_vector_bool&lt;x&gt;&amp;amp; rhs)
+    {
+        <span class="keyword">return</span> lhs() &amp;amp; rhs();
+    }&lt;/x&gt;&lt;/x&gt;&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
+
+&lt;p&gt;<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">x</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt;
+    <span class="directive">inline</span> X <span class="directive">operator</span>&amp;amp;&amp;amp;(<span class="directive">const</span> simd_vector_bool&lt;x&gt;&amp;amp; lhs, <span class="predefined-type">bool</span> rhs)
+    {
+        <span class="keyword">return</span> lhs() &amp;amp; rhs;
+    }&lt;/x&gt;&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
+
+&lt;p&gt;<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">x</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt;
+    <span class="directive">inline</span> X <span class="directive">operator</span>||(<span class="predefined-type">bool</span> lhs, <span class="directive">const</span> simd_vector_bool&lt;x&gt;&amp;amp; rhs)
+    {
+        <span class="keyword">return</span> lhs &amp;amp; rhs();
+    }&lt;/x&gt;&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
+
+&lt;p&gt;<span class="comment">// Similar for operator|| overloads</span>
+<span class="comment">// …&lt;/p&gt;</span>
+
+&lt;p&gt;<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">x</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt;
+    <span class="directive">inline</span> X <span class="directive">operator</span>!(<span class="directive">const</span> simd_vector_bool&lt;x&gt;&amp;amp; rhs)
     {
         <span class="keyword">return</span> rhs() == <span class="integer">0</span>;
     }
 </pre></td>
 </tr></table>
- </figure></notextile></div>
+ </figure></notextile></div></x></class></p>
 
 <p>The inheriting class vector4fb only has to provide bitwise operators and equality/inequality operators :</p>
 
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>simd_sse.hpp</span></figcaption>
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>simd_sse.hpp</span></figcaption>
  <table class="CodeRay"><tr>
   <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
 <a href="#n2" name="n2">2</a>
@@ -780,71 +785,73 @@ overloads in inheriting classes :</p>
 <a href="#n52" name="n52">52</a>
 <a href="#n53" name="n53">53</a>
 <a href="#n54" name="n54">54</a>
+<a href="#n55" name="n55">55</a>
 </pre></td>
   <td class="code"><pre>
 <span class="keyword">class</span> <span class="class">vector4fb</span> : <span class="directive">public</span> simd_vector_bool&lt;vector4fb&gt;
 {
-<span class="directive">public</span>:
+<span class="directive">public</span>:&lt;/vector4fb&gt;&lt;/p&gt;
 
-    <span class="directive">inline</span> vector4fb() {}
-    <span class="directive">inline</span> vector4fb(<span class="predefined-type">bool</span> b) : m_value(_mm_castsi128_ps(_mm_set1_epi32(-(<span class="predefined-type">int</span>)b))) {}
-    <span class="directive">inline</span> vector4fb(<span class="predefined-type">bool</span> b0, <span class="predefined-type">bool</span> b1, <span class="predefined-type">bool</span> b2, <span class="predefined-type">bool</span> b3)
-    : m_value(_mm_castsi128_ps(_mm_setr_epi32(-(<span class="predefined-type">int</span>)b0,-(<span class="predefined-type">int</span>)b1,-(<span class="predefined-type">int</span>)b2,-(<span class="predefined-type">int</span>)b3))) {}
+&lt;pre&gt;&lt;code&gt;<span class="directive">inline</span> vector4fb() {}
+<span class="directive">inline</span> vector4fb(<span class="predefined-type">bool</span> b) : m_value(_mm_castsi128_ps(_mm_set1_epi32(-(<span class="predefined-type">int</span>)b))) {}
+<span class="directive">inline</span> vector4fb(<span class="predefined-type">bool</span> b0, <span class="predefined-type">bool</span> b1, <span class="predefined-type">bool</span> b2, <span class="predefined-type">bool</span> b3)
+: m_value(_mm_castsi128_ps(_mm_setr_epi32(-(<span class="predefined-type">int</span>)b0,-(<span class="predefined-type">int</span>)b1,-(<span class="predefined-type">int</span>)b2,-(<span class="predefined-type">int</span>)b3))) {}
 
-    <span class="directive">inline</span> vector4fb(<span class="directive">const</span> __m128&amp; rhs) : m_value(rhs) {}
+<span class="directive">inline</span> vector4fb(<span class="directive">const</span> __m128&amp;amp; rhs) : m_value(rhs) {}
 
-    <span class="directive">inline</span> vector4fb&amp; <span class="directive">operator</span>=(<span class="directive">const</span> __m128&amp; rhs)
-    {
-        m_value = rhs;
-        <span class="keyword">return</span> *<span class="local-variable">this</span>;
-    }
+<span class="directive">inline</span> vector4fb&amp;amp; <span class="directive">operator</span>=(<span class="directive">const</span> __m128&amp;amp; rhs)
+{
+    m_value = rhs;
+    <span class="keyword">return</span> *<span class="local-variable">this</span>;
+}
 
-    <span class="directive">inline</span> <span class="directive">operator</span> __m128() <span class="directive">const</span> { <span class="keyword">return</span> m_value; }
+<span class="directive">inline</span> <span class="directive">operator</span> __m128() <span class="directive">const</span> { <span class="keyword">return</span> m_value; }
+&lt;/code&gt;&lt;/pre&gt;
 
-<span class="directive">private</span>:
+&lt;p&gt;<span class="directive">private</span>:&lt;/p&gt;
 
-    __m128 m_value;
-};
+&lt;pre&gt;&lt;code&gt;__m128 m_value; };
+&lt;/code&gt;&lt;/pre&gt;
 
-<span class="directive">inline</span> vector4fb <span class="directive">operator</span>&amp;(<span class="directive">const</span> vector4fb&amp; lhs, <span class="directive">const</span> vector4fb&amp; rhs)
+&lt;p&gt;<span class="directive">inline</span> vector4fb <span class="directive">operator</span>&amp;amp;(<span class="directive">const</span> vector4fb&amp;amp; lhs, <span class="directive">const</span> vector4fb&amp;amp; rhs)
 {
     <span class="keyword">return</span> _mm_and_ps(lhs,rhs);
-}
+}&lt;/p&gt;
 
-<span class="directive">inline</span> vector4fb <span class="directive">operator</span>|(<span class="directive">const</span> vector4fb&amp; lhs, <span class="directive">const</span> vector4fb&amp; rhs)
+&lt;p&gt;<span class="directive">inline</span> vector4fb <span class="directive">operator</span>|(<span class="directive">const</span> vector4fb&amp;amp; lhs, <span class="directive">const</span> vector4fb&amp;amp; rhs)
 {
     <span class="keyword">return</span> _mm_or_ps(lhs,rhs);
-}
+}&lt;/p&gt;
 
-<span class="directive">inline</span> vector4fb <span class="directive">operator</span>^(<span class="directive">const</span> vector4fb&amp; lhs, <span class="directive">const</span> vector4fb&amp; rhs)
+&lt;p&gt;<span class="directive">inline</span> vector4fb <span class="directive">operator</span>^(<span class="directive">const</span> vector4fb&amp;amp; lhs, <span class="directive">const</span> vector4fb&amp;amp; rhs)
 {
     <span class="keyword">return</span> _mm_xor_ps(lhs,rhs);
-}
+}&lt;/p&gt;
 
-<span class="directive">inline</span> vector4fb <span class="directive">operator</span>~(<span class="directive">const</span> vector4fb&amp; rhs)
+&lt;p&gt;<span class="directive">inline</span> vector4fb <span class="directive">operator</span>~(<span class="directive">const</span> vector4fb&amp;amp; rhs)
 {
     <span class="keyword">return</span> _mm_xor_ps(rhs,_mm_castsi128_ps(_mm_set1_epi32(-<span class="integer">1</span>)));
-}
+}&lt;/p&gt;
 
-<span class="directive">inline</span> vector4fb <span class="directive">operator</span>==(<span class="directive">const</span> vector4fb&amp; lhs, <span class="directive">const</span> vector4fb&amp; rhs)
+&lt;p&gt;<span class="directive">inline</span> vector4fb <span class="directive">operator</span>==(<span class="directive">const</span> vector4fb&amp;amp; lhs, <span class="directive">const</span> vector4fb&amp;amp; rhs)
 {
     <span class="keyword">return</span> _mm_cmeq_ps(lhs,rhs);
-}
+}&lt;/p&gt;
 
-<span class="directive">inline</span> vector4fb <span class="directive">operator</span>!=(<span class="directive">const</span> vector4f&amp; lhs, <span class="directive">const</span> vector4fb&amp; rhs)
+&lt;p&gt;<span class="directive">inline</span> vector4fb <span class="directive">operator</span>!=(<span class="directive">const</span> vector4f&amp;amp; lhs, <span class="directive">const</span> vector4fb&amp;amp; rhs)
 {
     <span class="keyword">return</span> _mm_cmpneq_ps(lhs,rhs);
 }
 </pre></td>
 </tr></table>
- </figure></notextile></div>
+ </figure></notextile></div></p>
 
 <p>Now we have wrappers for boolean, we can add the comparison operators to the vector4f class; again,
 to avoid code duplication, some operators will be implemented in the base class and will be based on
 specific operators implemented in the inheriting class. Let’s start with the vector4f comparison
 operators :</p>
 
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>simd_sse.hpp </span></figcaption>
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>simd_sse.hpp </span></figcaption>
  <table class="CodeRay"><tr>
   <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
 <a href="#n2" name="n2">2</a>
@@ -871,29 +878,29 @@ operators :</p>
 </pre></td>
   <td class="code"><pre>
 <span class="comment">// Definition of vector4f and arithmetic overloads</span>
-<span class="comment">// ...</span>
-<span class="directive">inline</span> vector4fb <span class="directive">operator</span>==(<span class="directive">const</span> vector4f&amp; lhs, <span class="directive">const</span> vector4f&amp; rhs)
+<span class="comment">// …</span>
+<span class="directive">inline</span> vector4fb <span class="directive">operator</span>==(<span class="directive">const</span> vector4f&amp;amp; lhs, <span class="directive">const</span> vector4f&amp;amp; rhs)
 {
     <span class="keyword">return</span> _mm_cmpeq_ps(lhs,rhs);
-}
+}&lt;/p&gt;
 
-<span class="directive">inline</span> vector4fb <span class="directive">operator</span>!=(<span class="directive">const</span> vector4f&amp; lhs, <span class="directive">const</span> vector4f&amp; rhs)
+&lt;p&gt;<span class="directive">inline</span> vector4fb <span class="directive">operator</span>!=(<span class="directive">const</span> vector4f&amp;amp; lhs, <span class="directive">const</span> vector4f&amp;amp; rhs)
 {
     <span class="keyword">return</span> _mm_cmpneq_ps(lhs,rhs);
-}
+}&lt;/p&gt;
 
-<span class="directive">inline</span> vector4fb <span class="directive">operator</span>&lt;(<span class="directive">const</span> vector4f&amp; lhs, <span class="directive">const</span> vector4f&amp; rhs)
+&lt;p&gt;<span class="directive">inline</span> vector4fb <span class="directive">operator</span>&amp;lt;(<span class="directive">const</span> vector4f&amp;amp; lhs, <span class="directive">const</span> vector4f&amp;amp; rhs)
 {
     <span class="keyword">return</span> _mm_cmplt_ps(lhs,rhs);
-}
+}&lt;/p&gt;
 
-<span class="directive">inline</span> vector4fb <span class="directive">operator</span>&lt;=(<span class="directive">const</span> vector4f&amp; lhs, <span class="directive">const</span> vector4f&amp; rhs)
+&lt;p&gt;<span class="directive">inline</span> vector4fb <span class="directive">operator</span>&amp;lt;=(<span class="directive">const</span> vector4f&amp;amp; lhs, <span class="directive">const</span> vector4f&amp;amp; rhs)
 {
     <span class="keyword">return</span> _mm_cmple_ps(lhs,rhs);
 }
 </pre></td>
 </tr></table>
- </figure></notextile></div>
+ </figure></notextile></div></p>
 
 <p>Before we implement operator&gt; and operator&gt;= for the base class, we have to focus on their return
 type. If these operators were implemented for vector4f, we would have return vector4fb; but since
@@ -902,7 +909,7 @@ arithmetic wrapper, i.e the inheriting class. What we need here is to provide a 
 arithmetic wrapper type and boolean wrapper type somewhere. Remeber the simd_vector_traits structure
 we declared to define our value_type ? It would be the perfect place for defining that mapping :</p>
 
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>simd_sse.hpp</span></figcaption>
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>simd_sse.hpp</span></figcaption>
  <table class="CodeRay"><tr>
   <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
 <a href="#n2" name="n2">2</a>
@@ -923,23 +930,23 @@ we declared to define our value_type ? It would be the perfect place for definin
 </pre></td>
   <td class="code"><pre>
 <span class="comment">// simd_vector_traits&lt;vector4f&gt; must be defined before vector4f so simd_vector can compile</span>
-<span class="comment">// (remember we use simd_vector_traits&lt;X&gt;::value_type in the definition of simd_vector).</span>
-<span class="keyword">class</span> <span class="class">vector4f</span>;
+<span class="comment">// (remember we use simd_vector_traits&lt;x&gt;::value_type in the definition of simd_vector).</span>
+<span class="keyword">class</span> <span class="class">vector4f</span>;&lt;/x&gt;&lt;/vector4f&gt;&lt;/p&gt;
 
-<span class="comment">// Full specialization of the template vector_simd_traits declared in simd_base.hpp</span>
-<span class="keyword">template</span> &lt;&gt;
+&lt;p&gt;<span class="comment">// Full specialization of the template vector_simd_traits declared in simd_base.hpp</span>
+<span class="keyword">template</span> &amp;lt;&amp;gt;
     <span class="keyword">struct</span> vector_simd_traits&lt;vector4f&gt;
     {
         <span class="keyword">typedef</span> <span class="predefined-type">float</span> value_type;
         <span class="keyword">typedef</span> simd_vector4fb vetor_bool;
-    };
+    };&lt;/vector4f&gt;&lt;/p&gt;
 
-<span class="keyword">class</span> <span class="class">vector4f</span>
+&lt;p&gt;<span class="keyword">class</span> <span class="class">vector4f</span>
 {
-    <span class="comment">// ...</span>
+    <span class="comment">// …</span>
 </pre></td>
 </tr></table>
- </figure></notextile></div>
+ </figure></notextile></div></p>
 
 <p>A last remark before we add the last comparison operators : since the template vector_simd_traits
 will never be defined but full specialized instead, there is no risk we forget to define it when
@@ -947,7 +954,7 @@ we add a new wrapper, we’ll have a compilation error.</p>
 
 <p>Finally, we can add the missing operators for the base class :</p>
 
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>simd_base.hpp </span></figcaption>
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>simd_base.hpp </span></figcaption>
  <table class="CodeRay"><tr>
   <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
 <a href="#n2" name="n2">2</a>
@@ -969,24 +976,24 @@ we add a new wrapper, we’ll have a compilation error.</p>
 </pre></td>
   <td class="code"><pre>
 <span class="comment">// Declaration of simd_vector and operators</span>
-<span class="comment">//...</span>
+<span class="comment">//…&lt;/p&gt;</span>
 
-<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">X</span>&gt;
-    <span class="directive">inline</span> <span class="keyword">typename</span> simd_vector_traits&lt;X&gt;::vector_bool
-    <span class="directive">operator</span>&gt;(<span class="directive">const</span> simd_vector&lt;X&gt;&amp; lhs, <span class="directive">const</span> simd_vector&lt;X&gt;&amp; rhs)
+&lt;p&gt;<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">x</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt;
+    <span class="directive">inline</span> <span class="keyword">typename</span> simd_vector_traits&lt;x&gt;::vector_bool
+    <span class="directive">operator</span>&amp;gt;(<span class="directive">const</span> simd_vector&lt;x&gt;&amp;amp; lhs, <span class="directive">const</span> simd_vector&lt;x&gt;&amp;amp; rhs)
     {
-        <span class="keyword">return</span> rhs() &lt;= lhs();
-    }
+        <span class="keyword">return</span> rhs() &amp;lt;= lhs();
+    }&lt;/x&gt;&lt;/x&gt;&lt;/x&gt;&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
 
-<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">X</span>&gt;
-    <span class="directive">inline</span> <span class="keyword">typename</span> simd_vector_traits&lt;X&gt;::vector_bool
-    <span class="directive">operator</span>&gt;=(<span class="directive">const</span> simd_vector&lt;X&gt;&amp; lhs, <span class="directive">const</span> simd_vector&lt;X&gt;&amp; rhs)
+&lt;p&gt;<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">x</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt;
+    <span class="directive">inline</span> <span class="keyword">typename</span> simd_vector_traits&lt;x&gt;::vector_bool
+    <span class="directive">operator</span>&amp;gt;=(<span class="directive">const</span> simd_vector&lt;x&gt;&amp;amp; lhs, <span class="directive">const</span> simd_vector&lt;x&gt;&amp;amp; rhs)
     {
-        <span class="keyword">return</span> rhs() &lt; lhs();
+        <span class="keyword">return</span> rhs() &amp;lt; lhs();
     }
 </pre></td>
 </tr></table>
- </figure></notextile></div>
+ </figure></notextile></div></x></x></x></class></p>
 
 <h3 id="logical-operators">2.6 Logical operators</h3>
 
@@ -1101,7 +1108,7 @@ set is available and thus which file to include. For now, just assume we’re ab
 to handle other instructions set, you could think of using SSE/AVX intrinsics directly. I hope this sample code will make you
 change your mind :</p>
 
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>SSE_sample.cpp </span></figcaption>
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>SSE_sample.cpp </span></figcaption>
  <table class="CodeRay"><tr>
   <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
 <a href="#n2" name="n2">2</a>
@@ -1113,22 +1120,22 @@ change your mind :</p>
 <a href="#n8" name="n8">8</a>
 </pre></td>
   <td class="code"><pre>
-<span class="comment">// computes e = a*b + c*d using SSE where a, b, c, d and e are vector of floats</span>
-<span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &lt; e.size(); i += <span class="integer">4</span>)
+<span class="comment">// computes e = a&lt;em&gt;b + c&lt;/em&gt;d using SSE where a, b, c, d and e are vector of floats</span>
+<span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &amp;lt; e.size(); i += <span class="integer">4</span>)
 {
-    __m128 val = _mm_add_ps(_mm_mul_ps(_mm_load_ps(&amp;a[i]),_mm_load_ps(&amp;b[i])),
-                            _mm_mul_ps(_mm_load_ps(&amp;c[i]),_mm_load_ps(&amp;d[i])));
-    _mm_store_ps(&amp;e[i],val);
+    __m128 val = _mm_add_ps(_mm_mul_ps(_mm_load_ps(&amp;amp;a[i]),_mm_load_ps(&amp;amp;b[i])),
+                            _mm_mul_ps(_mm_load_ps(&amp;amp;c[i]),_mm_load_ps(&amp;amp;d[i])));
+    _mm_store_ps(&amp;amp;e[i],val);
 }
 </pre></td>
 </tr></table>
- </figure></notextile></div>
+ </figure></notextile></div></p>
 
 <p>Quite hard to read, right ? And this is just for two multiplications and one addition; imagine using intrinsics in a huge amount of code,
 and you’ll get code really hard to understand and to maintain. What we need is a way to use __m128 with traditional arithmetic
 operators, as we do with float :</p>
 
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>wrapped_sample.cpp </span></figcaption>
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>wrapped_sample.cpp </span></figcaption>
  <table class="CodeRay"><tr>
   <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
 <a href="#n2" name="n2">2</a>
@@ -1139,15 +1146,15 @@ operators, as we do with float :</p>
 <a href="#n7" name="n7">7</a>
 </pre></td>
   <td class="code"><pre>
-<span class="comment">// computes e = a*b + c*d using SSE where a, b, c, d and e are vector of floats</span>
-<span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &lt; e.size(); i += <span class="integer">4</span>)
+<span class="comment">// computes e = a&lt;em&gt;b + c&lt;/em&gt;d using SSE where a, b, c, d and e are vector of floats</span>
+<span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &amp;lt; e.size(); i += <span class="integer">4</span>)
 {
-    __m128 val = load(&amp;a[i]) * load(&amp;b[i]) + load(&amp;c[i]) * load(&amp;d[i]);
-    store(&amp;e[i],val);
+    __m128 val = load(&amp;amp;a[i]) * load(&amp;amp;b[i]) + load(&amp;amp;c[i]) * load(&amp;amp;d[i]);
+    store(&amp;amp;e[i],val);
 }
 </pre></td>
 </tr></table>
- </figure></notextile></div>
+ </figure></notextile></div></p>
 
 <p>That’s the aim of the wrappers we start to write in the next section.</p>
 
@@ -1166,7 +1173,7 @@ the same operation on multiple data points simultaneously. Let’s consider a su
 on two sets of four floating point numbers. The difference bewteen scalar and SIMD operations is illustrated
 below :</p>
 
-<p><img src="http://jmabille.github.io/images/simd_scalar.png" alt="simd_scalar" /></p>
+<p><img src="/images/simd_scalar.png" alt="simd_scalar" /></p>
 
 <!-- more -->
 
