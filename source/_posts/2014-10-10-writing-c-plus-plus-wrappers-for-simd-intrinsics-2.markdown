@@ -9,9 +9,9 @@ published: false
 
 ## <a name="section_1"></a>1. SSE/AVX intrinsics
 
-Before we start to write any code, we need to see the instrinsics the compiler provides, and how it's organized.
-For the rest of this article and the following ones, I assume we use an Intel processor, recent enough to provide SSE 4
-and AVX; the compiler can be gcc or MSVC, the instrinsics they provide are almost the same.
+Before we start to write any code, we need to take a look at the instrinsics the compiler provides, and how things are
+organized. For the rest of this article and the following ones, I assume we use an Intel processor, recent enough to
+provide SSE 4 and AVX; the compiler can be gcc or MSVC, the instrinsics they provide are almost the same.
 
 If you already know about SSE / AVX intrinsics you can skip this section.
 <!-- more -->
