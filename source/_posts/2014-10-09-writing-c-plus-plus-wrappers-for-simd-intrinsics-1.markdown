@@ -30,7 +30,7 @@ own SIMD instruction set :
 + Altivec (Motorola processors)
 + MDMX (MIPS processors)
 
-Many of these instruction set still coexist nowadays, and you have to deal with all of them if you want to write portable
+Many of these instruction sets still coexist nowadays, and you have to deal with all of them if you want to write portable
 software. This is a first argument for writing wrappers : capture the abstraction of SIMD operations in nice interfaces,
 and forget about the implementation you rely on.
 
@@ -44,11 +44,11 @@ and we only have to handle the differences between the various SIMD instruction 
 I'll focus on wrapping Intel SIMD instruction set through this series of articles, but the wrappers will
 be generic enough so plugging other instruction set is easy.
 
-Since SIMD instructions are longtstanding, you might wonder if writing your own wrapper is relevant; maybe someone
+Since SIMD instructions are longstanding, you might wonder if writing your own wrapper is relevant; maybe someone
 did it before and there no need to write any code, all you have to do is to reuse existing code. Well, yes and no.
 
 [Agner Fog](http://www.agner.org/optimize/#vectorclass) has written some very usefull classes that handle Intel SIMD
-instruction set (different versions of SSE and AVX), but he doesn't make heavy use of metaprogramming in its
+instruction set (different versions of SSE and AVX), but he doesn't make heavy use of metaprogramming in his
 implementation; thus adding a new wrapper (for a new instruction set or a new version of an existing one)
 requires to type a lot of code that could have been factorized. Moreover, some essential tools are missing, such
 as an aligned memory allocator (we'll see why you need such a tool later). However his library is

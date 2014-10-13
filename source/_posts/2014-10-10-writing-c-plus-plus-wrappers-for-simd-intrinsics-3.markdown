@@ -67,7 +67,7 @@ vector4f operator+(const vector4f& lhs, const vector4f& rhs)
 {% endcoderay %}
 
 We could declare the operator overloads as friend functions of the wrapper class, or provide a get method returning the internal
-m_value. Both of these solutions work, but aren't elegant : the first requires a huge amount of friend declaration, the second
+m_value. Both of these solutions work, but aren't elegant : the first requires a huge amount of friend declarations, the second
 produces heavy code unpleasant to read.
 
 A more elegant solution is to provide a conversion operator from vector4f to __m128 ; since vector4f can be implicitly converted
@@ -106,8 +106,8 @@ private:
 ### 2.3 Arithmetic operators overloads
 
 Next step is to write the arithmetic operators overloads. The classic way to do this is to write
-computed assignment operators and to use them in operator overloads, so they don't have to access
-private members of vector4f ; but since vector4f can be implicitly converted to \_\_m128, we can
+computed assignment operators and to use them in operators overloads, so they don't have to access
+private members of vector4f; but since vector4f can be implicitly converted to \_\_m128, we can
 do the opposite and avoid using a temporary (this won't have any impact on performance since
 the compiler can optimize it, but produces shorter and more pleasant code to read) :
 
@@ -163,8 +163,8 @@ into a base class, and delegate the specific behavior to virtual methods, a typi
 polymorphism. What we need here is an equivalent architecture for classes with value semantics and no virtual
 methods (since virtual assignment operators are nonsense). This equivalent architecture is the CRTP
 (Curiously Recurring Template Pattern). A lot has been written about CRTP and I will not dwell on it. If you
-don't know about this pattern, the most important thing to know is CRTP allows you to invoke methods of inherite
-classes from the base class just as you would do through virtual methods, except the target method is resolved
+don't know about this pattern, the most important thing to know is CRTP allows you to invoke methods of inheriting
+classes from the base class just as you would do through virtual methods, except the target methods are resolved
 at compile time.
 
 Let's call our base class simd_vector, it will be used as base class for every wrapper ; here is what it should
@@ -181,7 +181,7 @@ template <class X>
 
 		typedef typename simd_vector_traits<X>::value_type value_type;
 
-		// downcast operators so we can call inherited methods
+		// downcast operators so we can call methods in the inheriting classes
 		inline X& operator()() { return *static_cast<X*>(this); }
 		inline const X& operator()() const { return *static_cast<const X*>(this); }
 
@@ -275,7 +275,7 @@ private:
 	__m128 m_value;
 };
 
-// Base on this operator implementation, simd_vector<vector4f> will generate
+// Based on this operator implementation, simd_vector<vector4f> will generate
 // the following methods and overloads :
 // vector4f& operator+=(const vector4f&)
 // vector4f operator++(int)
