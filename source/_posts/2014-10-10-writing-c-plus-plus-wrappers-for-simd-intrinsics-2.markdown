@@ -4,7 +4,6 @@ title: "Writing C++ Wrappers for SIMD Intrinsics (2)"
 date: 2014-10-10 00:54:37 +0200
 comments: true
 categories: [SIMD,Vectorization]
-published: false
 ---
 
 ## <a name="section_1"></a>1. SSE/AVX intrinsics
