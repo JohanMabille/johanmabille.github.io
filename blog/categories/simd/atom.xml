@@ -4,7 +4,7 @@
   <title><![CDATA[Category: SIMD | The C++ scientist]]></title>
   <link href="http://jmabille.github.io/blog/categories/simd/atom.xml" rel="self"/>
   <link href="http://jmabille.github.io/"/>
-  <updated>2014-10-13T03:15:20+02:00</updated>
+  <updated>2014-10-15T01:40:41+02:00</updated>
   <id>http://jmabille.github.io/</id>
   <author>
     <name><![CDATA[Johan Mabille]]></name>
@@ -120,7 +120,7 @@ vector4f <span class="directive">operator</span>+(<span class="directive">const<
  </figure></notextile></div></p>
 
 <p>We could declare the operator overloads as friend functions of the wrapper class, or provide a get method returning the internal
-m_value. Both of these solutions work, but aren’t elegant : the first requires a huge amount of friend declaration, the second
+m_value. Both of these solutions work, but aren’t elegant : the first requires a huge amount of friend declarations, the second
 produces heavy code unpleasant to read.</p>
 
 <p>A more elegant solution is to provide a conversion operator from vector4f to __m128 ; since vector4f can be implicitly converted
@@ -189,8 +189,8 @@ operator :</p>
 <h3 id="arithmetic-operators-overloads">2.3 Arithmetic operators overloads</h3>
 
 <p>Next step is to write the arithmetic operators overloads. The classic way to do this is to write
-computed assignment operators and to use them in operator overloads, so they don’t have to access
-private members of vector4f ; but since vector4f can be implicitly converted to __m128, we can
+computed assignment operators and to use them in operators overloads, so they don’t have to access
+private members of vector4f; but since vector4f can be implicitly converted to __m128, we can
 do the opposite and avoid using a temporary (this won’t have any impact on performance since
 the compiler can optimize it, but produces shorter and more pleasant code to read) :</p>
 
@@ -290,8 +290,8 @@ into a base class, and delegate the specific behavior to virtual methods, a typi
 polymorphism. What we need here is an equivalent architecture for classes with value semantics and no virtual
 methods (since virtual assignment operators are nonsense). This equivalent architecture is the CRTP
 (Curiously Recurring Template Pattern). A lot has been written about CRTP and I will not dwell on it. If you
-don’t know about this pattern, the most important thing to know is CRTP allows you to invoke methods of inherite
-classes from the base class just as you would do through virtual methods, except the target method is resolved
+don’t know about this pattern, the most important thing to know is CRTP allows you to invoke methods of inheriting
+classes from the base class just as you would do through virtual methods, except the target methods are resolved
 at compile time.</p>
 
 <p>Let’s call our base class simd_vector, it will be used as base class for every wrapper ; here is what it should
@@ -387,7 +387,7 @@ look like :</p>
 
 &lt;pre&gt;&lt;code&gt;    <span class="keyword">typedef</span> <span class="keyword">typename</span> simd_vector_traits&amp;lt;X&amp;gt;::value_type value_type;
 
-    <span class="comment">// downcast operators so we can call inherited methods</span>
+    <span class="comment">// downcast operators so we can call methods in the inheriting classes</span>
     <span class="directive">inline</span> X&amp;amp; <span class="directive">operator</span>()() { <span class="keyword">return</span> *<span class="keyword">static_cast</span>&amp;lt;X*&amp;gt;(<span class="local-variable">this</span>); }
     <span class="directive">inline</span> <span class="directive">const</span> X&amp;amp; <span class="directive">operator</span>()() <span class="directive">const</span> { <span class="keyword">return</span> *<span class="keyword">static_cast</span>&amp;lt;<span class="directive">const</span> X*&amp;gt;(<span class="local-variable">this</span>); }
 
@@ -540,7 +540,7 @@ it will get operator+= and the operator+ overloads for free (and the same for ot
 &lt;pre&gt;&lt;code&gt;__m128 m_value; };
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;<span class="comment">// Base on this operator implementation, simd_vector&lt;vector4f&gt; will generate</span>
+&lt;p&gt;<span class="comment">// Based on this operator implementation, simd_vector&lt;vector4f&gt; will generate</span>
 <span class="comment">// the following methods and overloads :</span>
 <span class="comment">// vector4f&amp;amp; operator+=(const vector4f&amp;amp;)</span>
 <span class="comment">// vector4f operator++(int)</span>
@@ -1008,7 +1008,7 @@ and operaotr~ is the same as the one for vector4fb, so I don’t repeat it here.
 AVX. You can also implement wrappers for int if you aim to do integre computation. The implementation is
 similar to what has been done in this section.</p>
 
-<p>Now we have nice wrappers, we’ll see in the next section how to plug them on existing code.</p>
+<p>Now we have nice wrappers, we’ll see in the next section how to plug them into existing code.</p>
 
 ]]></content>
   </entry>
@@ -1192,7 +1192,7 @@ own SIMD instruction set :</p>
   <li>MDMX (MIPS processors)</li>
 </ul>
 
-<p>Many of these instruction set still coexist nowadays, and you have to deal with all of them if you want to write portable
+<p>Many of these instruction sets still coexist nowadays, and you have to deal with all of them if you want to write portable
 software. This is a first argument for writing wrappers : capture the abstraction of SIMD operations in nice interfaces,
 and forget about the implementation you rely on.</p>
 
@@ -1206,11 +1206,11 @@ and we only have to handle the differences between the various SIMD instruction 
 <p>I’ll focus on wrapping Intel SIMD instruction set through this series of articles, but the wrappers will
 be generic enough so plugging other instruction set is easy.</p>
 
-<p>Since SIMD instructions are longtstanding, you might wonder if writing your own wrapper is relevant; maybe someone
-did it before and there no need to write any code, all you have to do is to reuse existing code. Well, yes and no.</p>
+<p>Since SIMD instructions are longstanding, you might wonder if writing your own wrapper is relevant; maybe someone
+did it before and there is no need to write any code, all you have to do is to reuse existing code. Well, yes and no.</p>
 
 <p><a href="http://www.agner.org/optimize/#vectorclass">Agner Fog</a> has written some very usefull classes that handle Intel SIMD
-instruction set (different versions of SSE and AVX), but he doesn’t make heavy use of metaprogramming in its
+instruction set (different versions of SSE and AVX), but he doesn’t make heavy use of metaprogramming in his
 implementation; thus adding a new wrapper (for a new instruction set or a new version of an existing one)
 requires to type a lot of code that could have been factorized. Moreover, some essential tools are missing, such
 as an aligned memory allocator (we’ll see why you need such a tool later). However his library is
