@@ -45,7 +45,7 @@ I'll focus on wrapping Intel SIMD instruction set through this series of article
 be generic enough so plugging other instruction set is easy.
 
 Since SIMD instructions are longstanding, you might wonder if writing your own wrapper is relevant; maybe someone
-did it before and there no need to write any code, all you have to do is to reuse existing code. Well, yes and no.
+did it before and there is no need to write any code, all you have to do is to reuse existing code. Well, yes and no.
 
 [Agner Fog](http://www.agner.org/optimize/#vectorclass) has written some very usefull classes that handle Intel SIMD
 instruction set (different versions of SSE and AVX), but he doesn't make heavy use of metaprogramming in his

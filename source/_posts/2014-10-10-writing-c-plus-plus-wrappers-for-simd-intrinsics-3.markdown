@@ -541,5 +541,5 @@ Next step is to implement wrapper for 2 double, then wrapper for 8 float and 4 d
 AVX. You can also implement wrappers for int if you aim to do integre computation. The implementation is
 similar to what has been done in this section.
 
-Now we have nice wrappers, we'll see in the next section how to plug them on existing code.
+Now we have nice wrappers, we'll see in the next section how to plug them into existing code.
 
