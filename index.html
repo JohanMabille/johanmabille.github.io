@@ -192,12 +192,12 @@ provide SSE 4 and AVX; the compiler can be gcc or MSVC, the instrinsics they pro
 
   <div class="entry-content"><h2 id="a-nameintroductionaintroduction"><a name="introduction"></a>Introduction</h2>
 
-<p>SIMD stands for Single Instruction, Mutiple Data, a class of parallel computers which can perform
-the same operation on multiple data points simultaneously. Let’s consider a summation we want to perform
-on two sets of four floating point numbers. The difference bewteen scalar and SIMD operations is illustrated
-below :</p>
-
-<p><img src="/images/simd_scalar.png" alt="simd_scalar" /></p>
+<p>SIMD (and more generally vectorization) is a longstanding topic and a lot has been written about it. But
+when I had to use it in my own applications, it appeared that most of the articles were theoretical,
+explaining the principles of the vectorization without practical examples of application ; some of them,
+however, linked to libraries using vectorization, but extending these libraries for my personal needs was
+difficult, if not painfull. Thus I had to implement my own libvrary and I decided to write a little tutorial to share
+my works and ideas in case someone would face the same needs.</p>
 
 </div>
   
