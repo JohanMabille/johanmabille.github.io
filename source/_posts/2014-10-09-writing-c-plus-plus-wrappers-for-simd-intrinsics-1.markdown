@@ -8,6 +8,15 @@ categories: [SIMD,vectorization]
 
 ## <a name="introduction"></a>Introduction
 
+SIMD (and more generally vectorization) is a longstanding topic and a lot has been written about it. But
+when I had to use it in my own applications, it appeared that most of the articles were theoretical,
+explaining the principles of the vectorization without practical examples of application ; some of them,
+however, linked to libraries using vectorization, but extending these libraries for my personal needs was
+difficult, if not painfull. Thus I had to implement my own libvrary and I decided to write a little tutorial to share
+my works and ideas in case someone would face the same needs.
+
+<!-- more -->
+
 SIMD stands for Single Instruction, Mutiple Data, a class of parallel computers which can perform
 the same operation on multiple data points simultaneously. Let's consider a summation we want to perform
 on two sets of four floating point numbers. The difference bewteen scalar and SIMD operations is illustrated
@@ -15,7 +24,6 @@ below :
 
 ![simd_scalar](/images/simd_scalar.png)
 
-<!-- more -->
 
 Using scalar operation, four add instructions must be executed one after other to obtain the sums, whereas
 SIMD uses a single instruction to achieve the same result. Thus SIMD operations yield higher efficiency than
@@ -44,14 +52,14 @@ and we only have to handle the differences between the various SIMD instruction 
 I'll focus on wrapping Intel SIMD instruction set through this series of articles, but the wrappers will
 be generic enough so plugging other instruction set is easy.
 
-Since SIMD instructions are longstanding, you might wonder if writing your own wrapper is relevant; maybe someone
-did it before and there is no need to write any code, all you have to do is to reuse existing code. Well, yes and no.
+Since SIMD instructions are longstanding, you might wonder if writing your own wrapper is relevant; maybe you could reuse
+an existing library wrapping these intrinsics. Well, it depends on your needs.
 
 [Agner Fog](http://www.agner.org/optimize/#vectorclass) has written some very usefull classes that handle Intel SIMD
 instruction set (different versions of SSE and AVX), but he doesn't make heavy use of metaprogramming in his
-implementation; thus adding a new wrapper (for a new instruction set or a new version of an existing one)
-requires to type a lot of code that could have been factorized. Moreover, some essential tools are missing, such
-as an aligned memory allocator (we'll see why you need such a tool later). However his library is
+implementation; thus adding a new wrapper (for a new instruction set, a new version of an existing one or even for
+your own numerical types)  requires to type a lot of code that could have been factorized. Moreover, some essential
+tools are missing, such as an aligned memory allocator (we'll see why you need such a tool later). However his library is
 a good point to start.
 
 Another library you might want to consider is the [Numerical Template Toolbox](https://github.com/MetaScale/nt2).
