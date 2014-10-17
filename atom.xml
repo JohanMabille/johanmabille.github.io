@@ -4,7 +4,7 @@
   <title><![CDATA[The C++ scientist]]></title>
   <link href="http://jmabille.github.io/atom.xml" rel="self"/>
   <link href="http://jmabille.github.io/"/>
-  <updated>2014-10-16T07:57:58+02:00</updated>
+  <updated>2014-10-17T09:14:09+02:00</updated>
   <id>http://jmabille.github.io/</id>
   <author>
     <name><![CDATA[Johan Mabille]]></name>
@@ -1165,7 +1165,7 @@ operators, as we do with float :</p>
 when I had to use it in my own applications, it appeared that most of the articles were theoretical,
 explaining the principles of the vectorization without practical examples of application ; some of them,
 however, linked to libraries using vectorization, but extending these libraries for my personal needs was
-difficult, if not painfull. Thus I had to implement my own libvrary and I decided to write a little tutorial to share
+difficult, if not painfull. Thus I had to implement my own library and I decided to write a little tutorial to share
 my works and ideas in case someone would face the same needs.</p>
 
 <!-- more -->
