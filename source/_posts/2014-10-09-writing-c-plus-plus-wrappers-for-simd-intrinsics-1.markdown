@@ -12,7 +12,7 @@ SIMD (and more generally vectorization) is a longstanding topic and a lot has be
 when I had to use it in my own applications, it appeared that most of the articles were theoretical,
 explaining the principles of the vectorization without practical examples of application ; some of them,
 however, linked to libraries using vectorization, but extending these libraries for my personal needs was
-difficult, if not painfull. Thus I had to implement my own libvrary and I decided to write a little tutorial to share
+difficult, if not painfull. Thus I had to implement my own library and I decided to write a little tutorial to share
 my works and ideas in case someone would face the same needs.
 
 <!-- more -->
