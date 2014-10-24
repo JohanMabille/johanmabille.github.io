@@ -4,7 +4,7 @@
   <title><![CDATA[The C++ scientist]]></title>
   <link href="http://jmabille.github.io/atom.xml" rel="self"/>
   <link href="http://jmabille.github.io/"/>
-  <updated>2014-10-24T08:36:44+02:00</updated>
+  <updated>2014-10-24T08:39:52+02:00</updated>
   <id>http://jmabille.github.io/</id>
   <author>
     <name><![CDATA[Johan Mabille]]></name>
@@ -12,6 +12,520 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Writing C++ Wrappers for SIMD Intrinsics (4)]]></title>
+    <link href="http://jmabille.github.io/blog/2014/10/13/writing-c-plus-plus-wrappers-for-simd-intrinsics-4/"/>
+    <updated>2014-10-13T22:46:01+02:00</updated>
+    <id>http://jmabille.github.io/blog/2014/10/13/writing-c-plus-plus-wrappers-for-simd-intrinsics-4</id>
+    <content type="html"><![CDATA[<h2 id="plugging-the-wrappers-into-existing-code">3. Plugging the wrappers into existing code</h2>
+
+<h3 id="storing-vector4f-instead-of-float">3.1 Storing vector4f instead of float</h3>
+
+<p>Now we have nice wrappers, let’s see how we can use them in real code. Suppose you have the following
+computation loop:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>sample.cpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+</pre></td>
+  <td class="code"><pre>
+std::vector&lt;<span class="predefined-type">float</span>&gt; a, b, c, d, e;
+<span class="comment">// somewhere in the code, a, b, c, d and e are</span>
+<span class="comment">// resized so they hold n elements</span>
+<span class="comment">// ...</span>
+<span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &lt; n; ++i)
+{
+    e[i] = a[i]*b[i] + c[i]*d[i];
+}
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+<!-- more -->
+
+<p>A first solution could be to store vector of vector4f instead of vector of float:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>sample.cpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+</pre></td>
+  <td class="code"><pre>
+std::vector&lt;vector4f&gt; a, b ,c, d, e;
+<span class="comment">// somewhere in the code, a, b, c, d and e are</span>
+<span class="comment">// resized so they hold n/4 vector4f</span>
+<span class="comment">// ...</span>
+<span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &lt; n/<span class="integer">4</span>; ++i)
+{
+    e[i] = a[i]*b[i] + c[i]*d[i];
+}
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+<p>Not so bad, thanks to the operators overloads, the code is exactly the same as the one for float, but
+the operations are performed on four floats at once. If n is not a multiple of four, we allocate an
+additional vector4f in each vector and we initialize the useless elements with 0.</p>
+
+<p>The problem is you could need to work with the scalar instead of the vector4f, for instance if you search
+for a specific element in the vector or if you fill your vector pushing back elements one by one. In this
+case, you would have to recode any piece of algorithm that works on single elements (and that includes a
+lot of STL algorithms) and then add special code for working on scalars within a vector4f. Working on
+scalars within vector4f is possible (we’ll see later how to modify our wrappers so we can do ir), but is
+slower than working directly on scalars, thus you could lose the benefits of using vectorization.</p>
+
+<h3 id="initializing-vector4f-from-container-of-float">3.2 Initializing vector4f from container of float</h3>
+
+<p>Another solution could be to initialize the wrapper from values stored in a vector:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>sample.cpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+<a href="#n14" name="n14">14</a>
+<a href="#n15" name="n15">15</a>
+<a href="#n16" name="n16">16</a>
+<a href="#n17" name="n17">17</a>
+<a href="#n18" name="n18">18</a>
+<a href="#n19" name="n19">19</a>
+</pre></td>
+  <td class="code"><pre>
+std::vector&lt;<span class="predefined-type">float</span>&gt;a, b, c, d, e;
+<span class="comment">// somewhere in the code, a, b, c, d and e are</span>
+<span class="comment">// resized so they hold n elements</span>
+/ ...
+<span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &lt; n/<span class="integer">4</span>; i += <span class="integer">4</span>)
+{
+    vector4f av(a[i],a[i+<span class="integer">1</span>],a[i+<span class="integer">2</span>],a[i+<span class="integer">3</span>]);
+    vector4f bv(b[i],b[i+<span class="integer">1</span>],b[i+<span class="integer">2</span>],b[i+<span class="integer">3</span>]);
+    vector4f cv(c[i],c[i+<span class="integer">1</span>],c[i+<span class="integer">2</span>],c[i+<span class="integer">3</span>]);
+    vector4f dv(d[i],d[i+<span class="integer">1</span>],d[i+<span class="integer">2</span>],d[i+<span class="integer">3</span>]);
+
+    vector4f ev = av*bv + cv*dv;
+    <span class="comment">// how do we store ev in e[i],e[i+1],e[i+2],e[i+3] ?</span>
+}
+<span class="keyword">for</span>(size_t i = n/<span class="integer">4</span>; i &lt; n; ++i)
+{
+    e[i] = a[i]*b[i] + c[i]*d[i];
+}
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+<p>The first problem is we need a way to store a vector4f into 4 floats; as said in the previous paragraph, we
+can add to our wrappers a method that returns a scalar within the vector4f and invoke it that way:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>sample.cpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+</pre></td>
+  <td class="code"><pre>
+e[i]   = ev[<span class="integer">0</span>];
+e[i+<span class="integer">1</span>] = ev[<span class="integer">1</span>];
+e[i+<span class="integer">2</span>] = ev[<span class="integer">2</span>];
+e[i+<span class="integer">3</span>] = ev[<span class="integer">3</span>];
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+<p>The second problem is this code is not generic; if you migrate from SSE to AVX, you’ll have to update the
+initialization of your wrapper so it takes 8 floats; the same for storing your vector4f in scalar results.</p>
+
+<p>What we need here is a way to load float into vector4f and to store vector4f into floats that doesn’t
+depend on the size of vector4f (that is, 4). That’s the aim of the load and store intrinsics.</p>
+
+<h3 id="load-from-and-store-to-memory">3.3 Load from and store to memory</h3>
+
+<p>If you take a look at the xmmintrin.h file, you’ll notice the compiler provides two kinds of load and store
+intrinsics :</p>
+
+<ul>
+  <li>_mm_load_ps / _mm_store_ps : these functions require the source / destination memory buffer to be aligned;
+the alignment boundary depends on the version of the SIMD you’re using : 16 bits for SSE2, 32 bits for AVX.</li>
+  <li>_mm_loadu_ps / _mm_storeu_ps : these functions don’t require any alignment of the source / destination
+memory buffer.</li>
+</ul>
+
+<p>Intrinsics with alignment constraints are faster, and should be used by default; however, even if memory allocations
+are aligned, you can’t guarantee that the memory buffer you pass to load / store function is aligned. Indeed, consider
+the matrix product C=AxB, where A is a 15x15 matrix of floats with linear row storage and B a vector that holds 15
+float elements. The computation of C[1] starts with:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>sample.cpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+</pre></td>
+  <td class="code"><pre>
+vector4f tmp(<span class="integer">0</span>);
+<span class="keyword">for</span>(size_t k = <span class="integer">0</span>; k &lt; <span class="integer">12</span>; k+=<span class="integer">4</span>)
+{
+    tmp += loadu(a+<span class="integer">15</span>+k) * load(b+k);
+}
+<span class="comment">// ...</span>
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+<p>Here, if A is 16-byte aligned, since the size of a float is 4 bytes, a[15], a[19] and a[23] aren’t 16-byte aligned, and you
+have to use the unaligned overload of the intrinsics (designated by the generic <em>loadu</em> function in the sample code).</p>
+
+<p>Here’s how we need to update our wrappers to handle load and store functions:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>simd_sse.hpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+<a href="#n14" name="n14">14</a>
+<a href="#n15" name="n15">15</a>
+<a href="#n16" name="n16">16</a>
+<a href="#n17" name="n17">17</a>
+<a href="#n18" name="n18">18</a>
+<a href="#n19" name="n19">19</a>
+<strong><a href="#n20" name="n20">20</a></strong>
+<a href="#n21" name="n21">21</a>
+<a href="#n22" name="n22">22</a>
+<a href="#n23" name="n23">23</a>
+<a href="#n24" name="n24">24</a>
+<a href="#n25" name="n25">25</a>
+<a href="#n26" name="n26">26</a>
+<a href="#n27" name="n27">27</a>
+<a href="#n28" name="n28">28</a>
+<a href="#n29" name="n29">29</a>
+</pre></td>
+  <td class="code"><pre>
+<span class="keyword">class</span> <span class="class">vector4f</span> : <span class="directive">public</span> simd_vector&lt;vector4f&gt;
+{
+<span class="directive">public</span>:
+
+    <span class="comment">// ...</span>
+
+    <span class="directive">inline</span> vector4f&amp; load_a(<span class="directive">const</span> <span class="predefined-type">float</span>* src)
+    {
+        m_value = _mm_load_ps(src);
+        <span class="keyword">return</span> *<span class="local-variable">this</span>;
+    }
+
+    <span class="directive">inline</span> vector4f&amp; load_u(<span class="directive">const</span> <span class="predefined-type">float</span>* src)
+    {
+        m_value = _mm_loadu_ps(src);
+        <span class="keyword">return</span> *<span class="local-variable">this</span>;
+    }
+
+    <span class="directive">inline</span> <span class="directive">void</span> store_a(<span class="predefined-type">float</span>* dst) <span class="directive">const</span>
+    {
+        _mm_store_ps(dst,m_value);
+    }
+
+    <span class="directive">inline</span> <span class="directive">void</span> store_u(<span class="predefined-type">float</span>* dst) <span class="directive">const</span>
+    {
+        _mm_storeu_ps(dst,m_value);
+    }
+};
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+<p>Assuming the memory buffer of std::vector is 16-bytes aligned, the sample code becomes:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>sample.cpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+<a href="#n14" name="n14">14</a>
+<a href="#n15" name="n15">15</a>
+<a href="#n16" name="n16">16</a>
+<a href="#n17" name="n17">17</a>
+<a href="#n18" name="n18">18</a>
+<a href="#n19" name="n19">19</a>
+</pre></td>
+  <td class="code"><pre>
+std::vector&lt;<span class="predefined-type">float</span>&gt;a, b, c, d, e;
+<span class="comment">// somewhere in the code, a, b, c, d and e are</span>
+<span class="comment">// resized so they hold n elements</span>
+/ ...
+<span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &lt; n/<span class="integer">4</span>; i += <span class="integer">4</span>)
+{
+    vector4f av; av.load_a(&amp;a[i]);
+    vector4f bv; bv.load_a(&amp;b[i));
+    vector4f cv; cv.load_a(&amp;c[i]);
+    vector4f dv; dv.load_a(&amp;d[i]);
+
+    vector4f ev = av*bv + cv*dv;
+    ev.store_a(&amp;e[i]);
+}
+<span class="keyword">for</span>(size_t i = n/<span class="integer">4</span>; i &lt; n; ++i)
+{
+    e[i] = a[i]*b[i] + c[i]*d[i];
+}
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+<p>Now, if we migrate our code from SSE to AVX, all we have to do is to replace vector4f by vector8f! (Ok, we also have to deal
+with memory alignment issues, I come back to this in a few moments). We’ll see in a future section how we can avoid the explicit
+usage of vector4f so we get full genericity. But for now, we have to face a last problem: in the sample code, we assumed the
+memory buffer wrapped by std::vector was 16-bytes aligned. How do we know a memory allocation is aligned, and how do we know the
+boundary alignment ?</p>
+
+<p>The answer is it depends on your system and your compiler. On Windows 64 bits, dynamic memory allocation is 16-bytes aligned; in GNU
+systems, a block returned by malloc or realloc is always a multiple of 8 (32-bit systems) or 16 (64-bit system). So if we want to
+write code generic enough to handle many SIMD instruction set, it’s clear we must provide a way to ensure memory allocation is
+always aligned, and is aligned on a given boundary.</p>
+
+<p><a name="simd_memory_allocator"></a>The solution is to design an aligned memory allocator and to use it in std::vector:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>sample.cpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+</pre></td>
+  <td class="code"><pre>
+<span class="keyword">typedef</span> aligned_allocator&lt;<span class="integer">16</span>&gt; simd_allocator;
+std::vector&lt;<span class="predefined-type">float</span>,simd_allocator&gt; a,b,c,d,e.
+<span class="comment">// ....</span>
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+<p>Now, we can handle any alignment boundary requirement through a typedef :</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>sample.cpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+</pre></td>
+  <td class="code"><pre>
+<span class="keyword">typedef</span> aligned_allocator&lt;<span class="integer">16</span>&gt; simd_allocator_sse; <span class="comment">// SSE</span>
+<span class="keyword">typedef</span> aligned_allocator&lt;<span class="integer">32</span>&gt; simd_allocator_avx; <span class="comment">// AVX </span>
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+<h3 id="conditional-branch">3.4 Conditional branch</h3>
+
+<p>Another issue we have to deal with, when we plug our wrapper, is conditional branching; indeed the “if(condition) … else” statement
+evaluates a branch depending on the scalar condition, but the if statement works only for scalar condition, and we can’t directly
+override it so it works with our wrappers. Consider the following code:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>sample.cpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+<a href="#n14" name="n14">14</a>
+</pre></td>
+  <td class="code"><pre>
+std::vector&lt;<span class="predefined-type">float</span>&gt; a,b,c,d,e;
+<span class="comment">// ... initialization of a, b, c and d</span>
+<span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &lt; a.size(); ++i)
+{
+    <span class="keyword">if</span>(a[i] &gt; <span class="integer">0</span>)
+    {
+        e[i] = a[i]*b[i] + c[i]*d[i];
+    }
+    <span class="keyword">else</span>
+    {
+        e[i] = b[i] + c[i]*d[i];
+    }
+}
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+<p>What we do here is selecting a value for e[i] depending on the sign of a[i]; the code could be written in a suboptimal way:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>sample.cpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+</pre></td>
+  <td class="code"><pre>
+<span class="predefined-type">float</span> select(<span class="predefined-type">bool</span> cond, <span class="predefined-type">float</span> v1, <span class="predefined-type">float</span> v2)
+{
+    <span class="keyword">return</span> cond ? v1 : v2;
+}
+
+<span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &lt; a.size(); ++i)
+{
+    <span class="predefined-type">float</span> e_tmp1 = a[i]*b[i] + c[i]*d[i];
+    <span class="predefined-type">float</span> e_tmp2 = b[i] + c[i]*d[i];
+
+    e[i] = select(a[i] &gt; <span class="integer">0</span>, e_tmp1, e_tmp2);
+}
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+<p>Although the “select” function is a bit overkill in the scalar case, it is exactly what we need for handling conditional
+branching with the SIMD wrappers. This means the two values (or “branches”) of the conditional statement will be evaluated
+before we choose the one to affect, but we can’t do better. And since you execute your conditional statement on 4 floats
+at once, it is still faster than the scalar version, even if suboptimal. The only case where the vectorized code could
+have a performance loss compared to the scalar code is if one of the conditional branch takes much more time to compute than
+the other and its result is seldom used.</p>
+
+<p>Knowing this, let’s see how we can implement a select function taking SIMD wrappers parameters. Depending on the SSE version,
+the compiler may provide a built-in function we can directly use as a ternary operator. If not, we have to handle it with old
+bitwise logical:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>sample.cpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+</pre></td>
+  <td class="code"><pre>
+vector4f select(<span class="directive">const</span> vector4fb&amp; cond, <span class="directive">const</span> vector4f&amp; a, <span class="directive">const</span> vector4f&amp; b)
+{
+<span class="preprocessor">#if</span> SSE_INSTR_SET &gt;= <span class="integer">5</span> <span class="comment">// SSE 4.1</span>
+    <span class="keyword">return</span> _mm_blendv_ps(b,a,cond);
+<span class="preprocessor">#else</span>
+    <span class="keyword">return</span> _mm_or_ps(_mm_and_ps(cond,a),_mm_andnot_ps(cond,b));
+<span class="preprocessor">#endif</span>
+}
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+<p>That’s it! We can now write the previous loop using full vectorization:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>sample.cpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+<a href="#n14" name="n14">14</a>
+<a href="#n15" name="n15">15</a>
+<a href="#n16" name="n16">16</a>
+</pre></td>
+  <td class="code"><pre>
+<span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &lt; n/<span class="integer">4</span>; i+=<span class="integer">4</span>)
+{
+    vector4f av; av.load_a(&amp;a[i]);
+    vector4f bv; bv.load_a(&amp;b[i));
+    vector4f cv; cv.load_a(&amp;c[i]);
+    vector4f dv; dv.load_a(&amp;d[i]);
+
+    vector4f e_tmp1 = av*bv + cv*dv;
+    vector4f e_tmp2 = bv + cv*dv;
+
+    vector4f ev = select(av &gt; <span class="integer">0</span>, e_tmp1, e_tmp2);
+    ev.store_a(&amp;e[i]);
+}
+<span class="comment">// scalar version for the last elements of the vectors</span>
+<span class="comment">// ...</span>
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+<p>Although this code is far better than using directly intrinsics, it is still very verbose and, worse, not generic. If you want to update
+your code so it uses AVX instead of SSE, you have to replace every occurence of vector4f by vector8f, and to change the loop condition
+and increment so it takes into account the size of vector8f instead of the one of vector4f. Doing this in real code will quickly become
+painful.</p>
+
+<p>What we need here is full genericity, so replacing an instruction set by another requires almost no code change. That the point of
+the next section.</p>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Writing C++ Wrappers for SIMD Intrinsics (3)]]></title>

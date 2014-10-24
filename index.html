@@ -9,8 +9,7 @@
   <meta name="author" content="Johan Mabille">
 
   
-  <meta name="description" content="2. First version of wrappers Now that we know a little more about SSE and AVX, let’s start writing code; the wrappers will have
-a data vector member &hellip;">
+  <meta name="description" content="3. Plugging the wrappers into existing code 3.1 Storing vector4f instead of float Now we have nice wrappers, let’s see how we can use them in real &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -79,6 +78,77 @@ a data vector member &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/10/13/writing-c-plus-plus-wrappers-for-simd-intrinsics-4/">Writing C++ Wrappers for SIMD Intrinsics (4)</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-10-13T22:46:01+02:00" pubdate data-updated="true">Oct 13<span>th</span>, 2014</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2 id="plugging-the-wrappers-into-existing-code">3. Plugging the wrappers into existing code</h2>
+
+<h3 id="storing-vector4f-instead-of-float">3.1 Storing vector4f instead of float</h3>
+
+<p>Now we have nice wrappers, let’s see how we can use them in real code. Suppose you have the following
+computation loop:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>sample.cpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+</pre></td>
+  <td class="code"><pre>
+std::vector&lt;<span class="predefined-type">float</span>&gt; a, b, c, d, e;
+<span class="comment">// somewhere in the code, a, b, c, d and e are</span>
+<span class="comment">// resized so they hold n elements</span>
+<span class="comment">// ...</span>
+<span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &lt; n; ++i)
+{
+    e[i] = a[i]*b[i] + c[i]*d[i];
+}
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2014/10/13/writing-c-plus-plus-wrappers-for-simd-intrinsics-4/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
   
   
     <article>
@@ -233,6 +303,10 @@ my works and ideas in case someone would face the same needs.</p>
     <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2014/10/13/writing-c-plus-plus-wrappers-for-simd-intrinsics-4/">Writing C++ Wrappers for SIMD Intrinsics (4)</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2014/10/10/writing-c-plus-plus-wrappers-for-simd-intrinsics-3/">Writing C++ Wrappers for SIMD Intrinsics (3)</a>
