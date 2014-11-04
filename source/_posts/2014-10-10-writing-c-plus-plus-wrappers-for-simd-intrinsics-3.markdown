@@ -482,7 +482,7 @@ Before we implement operator> and operator>= for the base class, we have to focu
 type. If these operators were implemented for vector4f, we would have return vector4fb; but since
 they are implemented for the base class, they need to return the boolean wrapper related to the
 arithmetic wrapper, i.e the inheriting class. What we need here is to provide a mapping between
-arithmetic wrapper type and boolean wrapper type somewhere. Remeber the simd_vector_traits structure
+arithmetic wrapper type and boolean wrapper type somewhere. Remember the simd_vector_traits structure
 we declared to define our value_type ? It would be the perfect place for defining that mapping :
 
 {% coderay lang:cpp simd_sse.hpp%}

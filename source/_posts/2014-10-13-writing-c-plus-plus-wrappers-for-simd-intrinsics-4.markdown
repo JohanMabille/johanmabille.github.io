@@ -245,12 +245,13 @@ have a performance loss compared to the scalar code is if one of the conditional
 the other and its result is seldom used.
 
 Knowing this, let's see how we can implement a select function taking SIMD wrappers parameters. Depending on the SSE version,
-the compiler may provide a built-in function we can directly use as a ternary operator. If not, we have to handle it with old
+the compiler may provide a built-in function we can directly use as ternary operator. If not, we have to handle it with old
 bitwise logical:
 
 {% coderay sample.cpp %}
 vector4f select(const vector4fb& cond, const vector4f& a, const vector4f& b)
 {
+// Don't bother with the SSE_INSTR_SET preprocessor token, we'll be back ont it later
 #if SSE_INSTR_SET >= 5 // SSE 4.1
 	return _mm_blendv_ps(b,a,cond);
 #else
