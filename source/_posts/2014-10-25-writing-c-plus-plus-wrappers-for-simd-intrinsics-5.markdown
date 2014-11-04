@@ -3,7 +3,7 @@ layout: post
 title: "Writing C++ Wrappers for SIMD Intrinsics (5)"
 date: 2014-10-25 11:28:18 +0200
 comments: true
-categories: [SIMD,Vectorization]
+categories: [SIMD,Vectorization,CodeProject]
 ---
 
 ## 4. Making the code more generic
