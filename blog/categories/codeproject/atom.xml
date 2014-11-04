@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: SIMD | The C++ scientist]]></title>
-  <link href="http://jmabille.github.io/blog/categories/simd/atom.xml" rel="self"/>
+  <title><![CDATA[Category: CodeProject | The C++ scientist]]></title>
+  <link href="http://jmabille.github.io/blog/categories/codeproject/atom.xml" rel="self"/>
   <link href="http://jmabille.github.io/"/>
   <updated>2014-11-04T20:46:46+01:00</updated>
   <id>http://jmabille.github.io/</id>
