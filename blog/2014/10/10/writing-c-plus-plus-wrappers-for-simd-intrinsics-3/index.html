@@ -986,7 +986,7 @@ operators :</p>
 type. If these operators were implemented for vector4f, we would have return vector4fb; but since
 they are implemented for the base class, they need to return the boolean wrapper related to the
 arithmetic wrapper, i.e the inheriting class. What we need here is to provide a mapping between
-arithmetic wrapper type and boolean wrapper type somewhere. Remeber the simd_vector_traits structure
+arithmetic wrapper type and boolean wrapper type somewhere. Remember the simd_vector_traits structure
 we declared to define our value_type ? It would be the perfect place for defining that mapping :</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>simd_sse.hpp</span></figcaption>
@@ -1155,6 +1155,10 @@ similar to what has been done in this section.</p>
     <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2014/10/25/writing-c-plus-plus-wrappers-for-simd-intrinsics-5/">Writing C++ Wrappers for SIMD Intrinsics (5)</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2014/10/13/writing-c-plus-plus-wrappers-for-simd-intrinsics-4/">Writing C++ Wrappers for SIMD Intrinsics (4)</a>

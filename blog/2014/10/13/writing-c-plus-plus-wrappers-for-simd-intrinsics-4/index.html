@@ -533,7 +533,7 @@ have a performance loss compared to the scalar code is if one of the conditional
 the other and its result is seldom used.</p>
 
 <p>Knowing this, let’s see how we can implement a select function taking SIMD wrappers parameters. Depending on the SSE version,
-the compiler may provide a built-in function we can directly use as a ternary operator. If not, we have to handle it with old
+the compiler may provide a built-in function we can directly use as ternary operator. If not, we have to handle it with old
 bitwise logical:</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>sample.cpp </span></figcaption>
@@ -547,10 +547,12 @@ bitwise logical:</p>
 <a href="#n7" name="n7">7</a>
 <a href="#n8" name="n8">8</a>
 <a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
 </pre></td>
   <td class="code"><pre>
 vector4f select(<span class="directive">const</span> vector4fb&amp; cond, <span class="directive">const</span> vector4f&amp; a, <span class="directive">const</span> vector4f&amp; b)
 {
+<span class="comment">// Don't bother with the SSE_INSTR_SET preprocessor token, we'll be back ont it later</span>
 <span class="preprocessor">#if</span> SSE_INSTR_SET &gt;= <span class="integer">5</span> <span class="comment">// SSE 4.1</span>
     <span class="keyword">return</span> _mm_blendv_ps(b,a,cond);
 <span class="preprocessor">#else</span>
@@ -656,6 +658,8 @@ the next section.</p>
         <a class="basic-alignment left" href="/blog/2014/10/10/writing-c-plus-plus-wrappers-for-simd-intrinsics-3/" title="Previous Post: Writing C++ Wrappers for SIMD Intrinsics (3)">&laquo; Writing C++ Wrappers for SIMD Intrinsics (3)</a>
       
       
+        <a class="basic-alignment right" href="/blog/2014/10/25/writing-c-plus-plus-wrappers-for-simd-intrinsics-5/" title="Next Post: Writing C++ Wrappers for SIMD Intrinsics (5)">Writing C++ Wrappers for SIMD Intrinsics (5) &raquo;</a>
+      
     </p>
   </footer>
 </article>
@@ -673,6 +677,10 @@ the next section.</p>
     <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2014/10/25/writing-c-plus-plus-wrappers-for-simd-intrinsics-5/">Writing C++ Wrappers for SIMD Intrinsics (5)</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2014/10/13/writing-c-plus-plus-wrappers-for-simd-intrinsics-4/">Writing C++ Wrappers for SIMD Intrinsics (4)</a>

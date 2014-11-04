@@ -4,7 +4,7 @@
   <title><![CDATA[Category: SIMD | The C++ scientist]]></title>
   <link href="http://jmabille.github.io/blog/categories/simd/atom.xml" rel="self"/>
   <link href="http://jmabille.github.io/"/>
-  <updated>2014-10-24T08:39:52+02:00</updated>
+  <updated>2014-11-04T20:22:03+01:00</updated>
   <id>http://jmabille.github.io/</id>
   <author>
     <name><![CDATA[Johan Mabille]]></name>
@@ -12,6 +12,693 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Writing C++ Wrappers for SIMD Intrinsics (5)]]></title>
+    <link href="http://jmabille.github.io/blog/2014/10/25/writing-c-plus-plus-wrappers-for-simd-intrinsics-5/"/>
+    <updated>2014-10-25T11:28:18+02:00</updated>
+    <id>http://jmabille.github.io/blog/2014/10/25/writing-c-plus-plus-wrappers-for-simd-intrinsics-5</id>
+    <content type="html"><![CDATA[<h2 id="making-the-code-more-generic">4. Making the code more generic</h2>
+
+<p>In the previous section we saw how to plug the wrappers into existing code and ended up with the following loop:
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>sample.cpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+</pre></td>
+  <td class="code"><pre>
+std::vector&lt;<span class="predefined-type">float</span>&gt; a, b, c, d, e
+<span class="comment">// Somewhere in the code the vectors are resized</span>
+<span class="comment">// so they hold n elements</span>
+<span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &amp;lt; n/<span class="integer">4</span>; i+=<span class="integer">4</span>)
+{
+    vector4f av; av.load_a(&amp;amp;a[i]);
+    vector4f bv; bv.load_a(&amp;amp;b[i));
+    vector4f cv; cv.load_a(&amp;amp;c[i]);
+    vector4f dv; dv.load_a(&amp;amp;d[i]);&lt;/<span class="predefined-type">float</span>&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;vector4f ev = av*bv + cv*dv;
+ev.store_a(&amp;amp;e[i]); } <span class="comment">// Remaining part of the loop // ... </span></pre></td>
+</tr></table>
+ </figure></notextile></div>
+</code></pre>
+
+<!-- more -->
+
+<p>As said in the previous section, the first problem of this code is its lack of genericity; we are highly coupled to the
+SIMD instruction set wrapped, and replacing it with another one requires code changes we should avoid. If we want to make
+the code independant from the SIMD instruction set and the related wrapper, we need to hide the data specific to this
+instruction set, that is, the vector type and its size (the number of scalars it holds).</p>
+
+<h3 id="hiding-the-wrapper-type">4.1 Hiding the wrapper type</h3>
+
+<p>Basically, we want to be able to select the right wrapper depending on the scalar type and the instruction set used. When
+talking about selecting a type depending on another one, the first thing that comes to mind is type traits. Here our traits
+must contain the wrapper type and its size depending on the scalar type used:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>simd_vector_traits.hpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+</pre></td>
+  <td class="code"><pre>
+<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">t</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt;
+    <span class="keyword">struct</span> simd_vector_traits
+    {
+        <span class="keyword">typedef</span> T type;
+        <span class="directive">static</span> <span class="directive">const</span> size_t size = <span class="integer">1</span>;
+    };
+</pre></td>
+</tr></table>
+ </figure></notextile></div></class></p>
+
+<p>The general definition of the traits class allows us to write code that works even for types that don’t have related
+wrappers (numerical types defined by another user for instance). Then we need to specialize these definitions for float
+and double, depending on the instruction set we used. Assume we can detect the instruction set available on our system
+and save this information in a macro (we’ll see how to do that in a later section). The specialization of the traits
+class will look like:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>simd.hpp</span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+<a href="#n14" name="n14">14</a>
+<a href="#n15" name="n15">15</a>
+<a href="#n16" name="n16">16</a>
+<a href="#n17" name="n17">17</a>
+<a href="#n18" name="n18">18</a>
+<a href="#n19" name="n19">19</a>
+<strong><a href="#n20" name="n20">20</a></strong>
+<a href="#n21" name="n21">21</a>
+<a href="#n22" name="n22">22</a>
+<a href="#n23" name="n23">23</a>
+<a href="#n24" name="n24">24</a>
+<a href="#n25" name="n25">25</a>
+<a href="#n26" name="n26">26</a>
+<a href="#n27" name="n27">27</a>
+<a href="#n28" name="n28">28</a>
+<a href="#n29" name="n29">29</a>
+<strong><a href="#n30" name="n30">30</a></strong>
+</pre></td>
+  <td class="code"><pre>
+<span class="preprocessor">#ifdef</span> USE_SSE
+<span class="keyword">template</span> &amp;lt;&amp;gt;
+    <span class="keyword">struct</span> simd_vector_traits&lt;<span class="predefined-type">float</span>&gt;
+    {
+        <span class="keyword">typedef</span> vector4f type;
+        <span class="directive">static</span> <span class="directive">const</span> size_t size = <span class="integer">4</span>;
+    };&lt;/<span class="predefined-type">float</span>&gt;&lt;/p&gt;
+
+&lt;p&gt;<span class="keyword">template</span> &amp;lt;&amp;gt;
+    <span class="keyword">struct</span> simd_vector_traits&lt;<span class="predefined-type">double</span>&gt;
+    {
+        <span class="keyword">typedef</span> vector2d type;
+        <span class="directive">static</span> <span class="directive">const</span> size_t size = <span class="integer">2</span>;
+    };
+<span class="preprocessor">#elif</span> USE_AVX
+<span class="keyword">template</span> &amp;lt;&amp;gt;
+    <span class="keyword">struct</span> simd_vector_traits&lt;<span class="predefined-type">float</span>&gt;
+    {
+        <span class="keyword">typedef</span> vector8f type;
+        <span class="directive">static</span> <span class="directive">const</span> size_t size = <span class="integer">8</span>;
+    };&lt;/<span class="predefined-type">float</span>&gt;&lt;/<span class="predefined-type">double</span>&gt;&lt;/p&gt;
+
+&lt;p&gt;<span class="keyword">template</span> &amp;lt;&amp;gt;
+    <span class="keyword">struct</span> simd_vector_traits&lt;<span class="predefined-type">double</span>&gt;
+    {
+        <span class="keyword">typedef</span> vector4d type;
+        <span class="directive">static</span> <span class="directive">const</span> size_t size = <span class="integer">4</span>;
+    };
+<span class="preprocessor">#endif</span>
+</pre></td>
+</tr></table>
+ </figure></notextile></div></double></p>
+
+<p>Now we can adapt the loop so it doesn’t explicitly refer to the vector4f type:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>sample.cpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+<a href="#n14" name="n14">14</a>
+</pre></td>
+  <td class="code"><pre>
+std::vector&lt;<span class="predefined-type">float</span>&gt; a,b,c,d,e;
+<span class="comment">// ... resize a, b, c, d, and e so they hold n elements</span>
+<span class="keyword">typedef</span> simd_vector_traits&lt;<span class="predefined-type">float</span>&gt;::type vec_type;
+size_t vec_size = simd_vector_traits&lt;<span class="predefined-type">float</span>&gt;::size;
+<span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &amp;lt; n/vec_size; i += vec_size)
+{
+    vec_type av; av.load_a(&amp;amp;a[i]);
+    vec_type bv; bv.load_a(&amp;amp;b[i));
+    vec_type cv; cv.load_a(&amp;amp;c[i]);
+    vec_type dv; dv.load_a(&amp;amp;d[i]);&lt;/<span class="predefined-type">float</span>&gt;&lt;/<span class="predefined-type">float</span>&gt;&lt;/<span class="predefined-type">float</span>&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;vec_type ev = av*bv + cv*dv;
+ev.store_a(&amp;amp;e[i]); } <span class="comment">// Remaining part of the loop // ... </span></pre></td>
+</tr></table>
+ </figure></notextile></div>
+</code></pre>
+
+<p>That’s it! If we need to compile this code on a system where AVX is available, we have nothing to do. The macro
+USE_AVX will be defined, the specialization of simd_traits with vector8f as inner type will be instantiated,
+and the loop will use the vector8f wrapper and the AVX intrinsics. However, there’s still a problem: we can
+migrate to any SIMD instruction set for which a wrapper is available, but we can’t use types that don’t have
+related wrappers. The simd_traits works fine even for user defined types, but the load and store functions are
+available for wrappers only. We need to provide generic versions of these functions that work with any type.</p>
+
+<h3 id="generic-load-an-store-functions">4.2 Generic load an store functions</h3>
+
+<p>Actually, all we have to do is to provide two versions of these functions: one for types that don’t have related
+wrappers, and one that works with wrappers. Template specialization can be of help here, but since partial
+specialization is not possible for functions, let’s wrap them into a simd_functions_invoker class:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>simd.hpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+<a href="#n14" name="n14">14</a>
+<a href="#n15" name="n15">15</a>
+<a href="#n16" name="n16">16</a>
+<a href="#n17" name="n17">17</a>
+<a href="#n18" name="n18">18</a>
+<a href="#n19" name="n19">19</a>
+<strong><a href="#n20" name="n20">20</a></strong>
+<a href="#n21" name="n21">21</a>
+<a href="#n22" name="n22">22</a>
+<a href="#n23" name="n23">23</a>
+<a href="#n24" name="n24">24</a>
+<a href="#n25" name="n25">25</a>
+<a href="#n26" name="n26">26</a>
+<a href="#n27" name="n27">27</a>
+<a href="#n28" name="n28">28</a>
+<a href="#n29" name="n29">29</a>
+<strong><a href="#n30" name="n30">30</a></strong>
+<a href="#n31" name="n31">31</a>
+<a href="#n32" name="n32">32</a>
+<a href="#n33" name="n33">33</a>
+<a href="#n34" name="n34">34</a>
+<a href="#n35" name="n35">35</a>
+<a href="#n36" name="n36">36</a>
+<a href="#n37" name="n37">37</a>
+<a href="#n38" name="n38">38</a>
+<a href="#n39" name="n39">39</a>
+<strong><a href="#n40" name="n40">40</a></strong>
+<a href="#n41" name="n41">41</a>
+</pre></td>
+  <td class="code"><pre>
+<span class="comment">// Common implementation for types that support vectorization</span>
+<span class="keyword">template</span> &amp;lt;<span class="keyword">class</span> <span class="class">T</span>, <span class="keyword">class</span> <span class="class">V</span>&amp;gt;
+    <span class="keyword">struct</span> simd_functions_invoker
+    {
+        <span class="directive">inline</span> <span class="directive">static</span> V
+        set1(<span class="directive">const</span> T&amp;amp; a) { <span class="keyword">return</span> V(a); }&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    <span class="directive">inline</span> <span class="directive">static</span> V
+    load_a(<span class="directive">const</span> T* src) { V res; res.load_a(src); }
+
+    <span class="directive">inline</span> <span class="directive">static</span> V
+    load_u(<span class="directive">const</span> T* src) { V res; res.load_u(src); }
+
+    <span class="directive">inline</span> <span class="directive">static</span> <span class="directive">void</span>
+    store_a(T* dst, <span class="directive">const</span> V&amp;amp; src) { src.store_a(dst); }
+
+    <span class="directive">inline</span> <span class="directive">static</span> <span class="directive">void</span>
+    store_u(T* dst, <span class="directive">const</span> V&amp;amp; src) { src.store_u(dst); }
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;<span class="comment">// Specialization for types that don’t support vectorization</span>
+<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">t</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt;
+    <span class="keyword">struct</span> simd_functions_invoker&amp;lt;T,T&amp;gt;
+    {
+        <span class="directive">inline</span> <span class="directive">static</span> T
+        set1(<span class="directive">const</span> T&amp;amp; a) { <span class="keyword">return</span> V(a); }&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    <span class="directive">inline</span> <span class="directive">static</span> T
+    load_a(<span class="directive">const</span> T* src) { <span class="keyword">return</span> *src; }
+
+    <span class="directive">inline</span> <span class="directive">static</span> T
+    load_u(<span class="directive">const</span> T* src) { <span class="keyword">return</span> *src; }
+
+    <span class="directive">inline</span> <span class="directive">static</span> <span class="directive">void</span>
+    store_a(T* dst, <span class="directive">const</span> T&amp;amp; src) { *dst = src; }
+
+    <span class="directive">inline</span> <span class="directive">static</span> <span class="directive">void</span>
+    store_u(T* dst, <span class="directive">const</span> T&amp;amp; src) { *dst = src; }
+}; </pre></td>
+</tr></table>
+ </figure></notextile></div>
+</code></pre>
+
+<p>We’ve added the set1 function so we can intialize wrappers and scalar type from a single value in an
+uniform way. Calling the generic functions would look like:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>sample.cpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+</pre></td>
+  <td class="code"><pre>
+<span class="keyword">typedef</span> simd_vector_traits&lt;<span class="predefined-type">float</span>&gt;::simd_type vec_type;
+vec_type va = simd_functions_invoker&amp;lt;<span class="predefined-type">float</span>,vec_type&amp;gt;::load_a(a);
+</pre></td>
+</tr></table>
+ </figure></notextile></div></float></p>
+
+<p>That’s too much verbose. Let’s add facade functions that deduce template parameters for us:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>simd.hpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+<a href="#n14" name="n14">14</a>
+<a href="#n15" name="n15">15</a>
+<a href="#n16" name="n16">16</a>
+<a href="#n17" name="n17">17</a>
+<a href="#n18" name="n18">18</a>
+<a href="#n19" name="n19">19</a>
+<strong><a href="#n20" name="n20">20</a></strong>
+</pre></td>
+  <td class="code"><pre>
+<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">t</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt; <span class="directive">inline</span> <span class="keyword">typename</span> simd_vector_traits&lt;t&gt;::type
+set1(<span class="directive">const</span> T&amp;amp; a)
+{ <span class="keyword">return</span> simd_functions_invoker&amp;lt;T,<span class="keyword">typename</span> simd_vector_traits&lt;t&gt;::type&amp;gt;::set1(a); }&lt;/t&gt;&lt;/t&gt;&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
+
+&lt;p&gt;<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">t</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt; <span class="directive">inline</span> <span class="keyword">typename</span> simd_vector_traits&lt;t&gt;::type
+load_a(<span class="directive">const</span> T* src)
+{ <span class="keyword">return</span> simd_functions_invoker&amp;lt;T,<span class="keyword">typename</span> simd_vector_traits&lt;t&gt;::type&amp;gt;::load_a(src); }&lt;/t&gt;&lt;/t&gt;&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
+
+&lt;p&gt;<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">t</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt; <span class="directive">inline</span> <span class="keyword">typename</span> simd_vector_traits&lt;t&gt;::type
+load_u(<span class="directive">const</span> T* src)
+{ <span class="keyword">return</span> simd_functions_invoker&amp;lt;T,<span class="keyword">typename</span> simd_vector_traits&lt;t&gt;::type&amp;gt;::load_u(src); }&lt;/t&gt;&lt;/t&gt;&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
+
+&lt;p&gt;<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">t</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt; <span class="directive">inline</span> <span class="directive">void</span>
+store_a(T* dst, <span class="directive">const</span> <span class="keyword">typename</span> simd_vector_traits&lt;t&gt;::type&amp;amp; src)
+{ simd_functions_invoker&amp;lt;T,<span class="keyword">typename</span> simd_vector_traits&lt;t&gt;::type&amp;gt;::store_a(dst,src); }&lt;/t&gt;&lt;/t&gt;&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
+
+&lt;p&gt;<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">t</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt; <span class="directive">inline</span> <span class="directive">void</span>
+store_u(T* dst, <span class="directive">const</span> <span class="keyword">typename</span> simd_vector_traits&lt;t&gt;::type&amp;amp; src)
+{ simd_functions_invoker&amp;lt;T,<span class="keyword">typename</span> simd_vector_traits&lt;t&gt;::type&amp;gt;::store_u(dst,src); }
+</pre></td>
+</tr></table>
+ </figure></notextile></div></t></t></class></p>
+
+<p>Now we can use these generic functions in the previous loop so it works with any type, even those
+which don’t support vectorization:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>sample.cpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+<a href="#n14" name="n14">14</a>
+</pre></td>
+  <td class="code"><pre>
+std::vector&lt;<span class="predefined-type">float</span>&gt; a,b,c,d,e;
+<span class="comment">// ... resize a, b, c, d, and e so they hold n elements</span>
+<span class="keyword">typedef</span> simd_vector_traits&lt;<span class="predefined-type">float</span>&gt;::type vec_type;
+size_t vec_size = simd_vector_traits&lt;<span class="predefined-type">float</span>&gt;::size;
+<span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &amp;lt; n/vec_size; i += vec_size)
+{
+    vec_type av = load_a(&amp;amp;a[i]);
+    vec_type bv = load_a(&amp;amp;b[i));
+    vec_type cv = load_a(&amp;amp;c[i]);
+    vec_type dv = load_a(&amp;amp;d[i]);&lt;/<span class="predefined-type">float</span>&gt;&lt;/<span class="predefined-type">float</span>&gt;&lt;/<span class="predefined-type">float</span>&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;vec_type ev = av*bv + cv*dv;
+store_a(&amp;amp;e[i],ev); } <span class="comment">// Remaining part of the loop // ... </span></pre></td>
+</tr></table>
+ </figure></notextile></div>
+</code></pre>
+
+<p>Or, if you want to be more concise:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>sample.cpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+</pre></td>
+  <td class="code"><pre>
+std::vector&lt;<span class="predefined-type">float</span>&gt; a,b,c,d,e;
+<span class="comment">// ... resize a, b, c, d, and e so they hold n elements</span>
+<span class="keyword">typedef</span> simd_vector_traits&lt;<span class="predefined-type">float</span>&gt;::type vec_type;
+size_t vec_size = simd_vector_traits&lt;<span class="predefined-type">float</span>&gt;::size;
+<span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &amp;lt; n/vec_size; i += vec_size)
+{
+    vec_type ev = load_a(&amp;amp;a[i])*load_a(&amp;amp;b[i]) + load_a(&amp;amp;c[i])*load_a(&amp;amp;d[i]));
+    store_a(&amp;amp;e[i], ev);
+}
+<span class="comment">// Remaining part of the loop</span>
+<span class="comment">// ...</span>
+</pre></td>
+</tr></table>
+ </figure></notextile></div></float></float></float></p>
+
+<p>We’ve reached our goal, we can use intrinsics almost as we use float; in a real application code, it is likely
+that you initialize the wrappers through load functions, then perform the computations and finally store the
+results (like in the not concise version of the generic loop); thus the only difference between classical code
+and code with SIMD wrappers is the initialization and storing of wrappers (and eventually the functions signatures
+if you want to pass wrappers instead of scalars), the other parts should be exactly the same and the code remains
+easy to read and to maintain.</p>
+
+<h3 id="detecting-the-supported-instruction-set">4.3 Detecting the supported instruction set</h3>
+
+<p>Until now, we’ve assumed we were able to detect at compile time the available instruction set. Let’s see now how
+to do that. Compilers often provide preprocessor tokens depending on the available instruction set, but these tokens
+may vary from one compiler to another, so we have to standardize that. On most 64-bit compilers, the tokens look
+like <strong>__SSE__</strong> or <strong>__SSE3__</strong>, on 32-bit systems, Microsoft compiler sets the preprocessor token
+<strong>_M_IX86_FP</strong> to 1 for SSE (vectorization of float) and 2 for SSE2 (vetorization of double and integers).</p>
+
+<p>Here is how we can standardize that:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>simd_config.hpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+<a href="#n14" name="n14">14</a>
+<a href="#n15" name="n15">15</a>
+<a href="#n16" name="n16">16</a>
+<a href="#n17" name="n17">17</a>
+<a href="#n18" name="n18">18</a>
+<a href="#n19" name="n19">19</a>
+<strong><a href="#n20" name="n20">20</a></strong>
+<a href="#n21" name="n21">21</a>
+<a href="#n22" name="n22">22</a>
+<a href="#n23" name="n23">23</a>
+<a href="#n24" name="n24">24</a>
+<a href="#n25" name="n25">25</a>
+<a href="#n26" name="n26">26</a>
+<a href="#n27" name="n27">27</a>
+<a href="#n28" name="n28">28</a>
+<a href="#n29" name="n29">29</a>
+<strong><a href="#n30" name="n30">30</a></strong>
+</pre></td>
+  <td class="code"><pre>
+<span class="preprocessor">#if</span> (defined(_M_AMD64) || defined(_M_X64) || defined(&lt;strong&gt;amd64)) &amp;amp;&amp;amp; ! defined(__x86&lt;em&gt;<span class="integer">64</span>__)
+    <span class="preprocessor">#define</span> __x86&lt;/em&gt;<span class="integer">64</span>&lt;/strong&gt; <span class="integer">1</span>
+<span class="preprocessor">#endif</span>&lt;/p&gt;
+
+&lt;p&gt;<span class="comment">// Find sse instruction set from compiler macros if SSE_INSTR_SET not defined</span>
+<span class="comment">// Note: Not all compilers define these macros automatically</span>
+<span class="preprocessor">#ifndef</span> SSE_INSTR_SET
+    <span class="preprocessor">#if</span> defined ( &lt;strong&gt;AVX2&lt;/strong&gt; )
+        <span class="preprocessor">#define</span> SSE_INSTR_SET <span class="integer">8</span>
+    <span class="preprocessor">#elif</span> defined ( &lt;strong&gt;AVX&lt;/strong&gt; )
+        <span class="preprocessor">#define</span> SSE_INSTR_SET <span class="integer">7</span>
+    <span class="preprocessor">#elif</span> defined ( &lt;strong&gt;SSE4&lt;em&gt;<span class="integer">2</span>__ )
+        <span class="preprocessor">#define</span> SSE_INSTR_SET <span class="integer">6</span>
+    <span class="preprocessor">#elif</span> defined ( __SSE4&lt;/em&gt;<span class="integer">1</span>&lt;/strong&gt; )
+        <span class="preprocessor">#define</span> SSE_INSTR_SET <span class="integer">5</span>
+    <span class="preprocessor">#elif</span> defined ( &lt;strong&gt;SSSE3&lt;/strong&gt; )
+        <span class="preprocessor">#define</span> SSE_INSTR_SET <span class="integer">4</span>
+    <span class="preprocessor">#elif</span> defined ( &lt;strong&gt;SSE3&lt;/strong&gt; )
+        <span class="preprocessor">#define</span> SSE_INSTR_SET <span class="integer">3</span>
+    <span class="preprocessor">#elif</span> defined ( &lt;strong&gt;SSE2&lt;/strong&gt; ) || defined ( &lt;strong&gt;x86_64&lt;/strong&gt; )
+        <span class="preprocessor">#define</span> SSE_INSTR_SET <span class="integer">2</span>
+    <span class="preprocessor">#elif</span> defined ( &lt;strong&gt;SSE&lt;/strong&gt; )
+        <span class="preprocessor">#define</span> SSE_INSTR_SET <span class="integer">1</span>
+    <span class="preprocessor">#elif</span> defined ( _M_IX86_FP )           <span class="comment">// Defined in MS compiler on 32bits system. 1: SSE, 2: SSE2</span>
+        <span class="preprocessor">#define</span> SSE_INSTR_SET _M_IX86_FP
+    <span class="preprocessor">#else</span>
+        <span class="preprocessor">#define</span> SSE_INSTR_SET <span class="integer">0</span>
+    <span class="preprocessor">#endif</span> <span class="comment">// instruction set defines</span>
+<span class="preprocessor">#endif</span> <span class="comment">// SSE_INSTR_SET</span>
+</pre></td>
+</tr></table>
+ </figure></notextile></div></p>
+
+<p>Now we can use the <strong>SSE_INSTR_SET</strong> token to include the right file:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>simd_config.hpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+<a href="#n14" name="n14">14</a>
+<a href="#n15" name="n15">15</a>
+<a href="#n16" name="n16">16</a>
+<a href="#n17" name="n17">17</a>
+<a href="#n18" name="n18">18</a>
+<a href="#n19" name="n19">19</a>
+<strong><a href="#n20" name="n20">20</a></strong>
+<a href="#n21" name="n21">21</a>
+<a href="#n22" name="n22">22</a>
+<a href="#n23" name="n23">23</a>
+<a href="#n24" name="n24">24</a>
+</pre></td>
+  <td class="code"><pre>
+<span class="preprocessor">#</span><span class="comment">// Include the appropriate header file for intrinsic functions</span>
+<span class="preprocessor">#if</span> SSE_INSTR_SET &amp;gt; <span class="integer">7</span>                  <span class="comment">// AVX2 and later</span>
+    <span class="preprocessor">#ifdef</span> &lt;strong&gt;GNUC&lt;/strong&gt;
+        <span class="preprocessor">#include</span> <span class="include">&lt;x86intrin.h&gt;</span>         <span class="comment">// x86intrin.h includes header files for whatever instruction</span>
+                                       <span class="comment">// sets are specified on the compiler command line, such as:</span>
+                                       <span class="comment">// xopintrin.h, fma4intrin.h</span>
+    <span class="preprocessor">#else</span>
+        <span class="preprocessor">#include</span> <span class="include">&lt;immintrin.h&gt;</span>         <span class="comment">// MS version of immintrin.h covers AVX, AVX2 and FMA3</span>
+    <span class="preprocessor">#endif</span> <span class="comment">// __GNUC__</span>
+<span class="preprocessor">#elif</span> SSE_INSTR_SET == <span class="integer">7</span>
+    <span class="preprocessor">#include</span> <span class="include">&lt;immintrin.h&gt;</span>             <span class="comment">// AVX</span>
+<span class="preprocessor">#elif</span> SSE_INSTR_SET == <span class="integer">6</span>
+    <span class="preprocessor">#include</span> <span class="include">&lt;nmmintrin.h&gt;</span>             <span class="comment">// SSE4.2</span>
+<span class="preprocessor">#elif</span> SSE_INSTR_SET == <span class="integer">5</span>
+    <span class="preprocessor">#include</span> <span class="include">&lt;smmintrin.h&gt;</span>             <span class="comment">// SSE4.1</span>
+<span class="preprocessor">#elif</span> SSE_INSTR_SET == <span class="integer">4</span>
+    <span class="preprocessor">#include</span> <span class="include">&lt;tmmintrin.h&gt;</span>             <span class="comment">// SSSE3</span>
+<span class="preprocessor">#elif</span> SSE_INSTR_SET == <span class="integer">3</span>
+    <span class="preprocessor">#include</span> <span class="include">&lt;pmmintrin.h&gt;</span>             <span class="comment">// SSE3</span>
+<span class="preprocessor">#elif</span> SSE_INSTR_SET == <span class="integer">2</span>
+    <span class="preprocessor">#include</span> <span class="include">&lt;emmintrin.h&gt;</span>             <span class="comment">// SSE2</span>
+<span class="preprocessor">#elif</span> SSE_INSTR_SET == <span class="integer">1</span>
+    <span class="preprocessor">#include</span> <span class="include">&lt;xmmintrin.h&gt;</span>             <span class="comment">// SSE</span>
+</pre></td>
+</tr></table>
+ </figure></notextile></div></xmmintrin.h></emmintrin.h></pmmintrin.h></tmmintrin.h></smmintrin.h></nmmintrin.h></immintrin.h></immintrin.h></x86intrin.h></p>
+
+<p>Note that if you split the implementation of SSE wrappers and AVX wrappers into different files, you
+can also use the <strong>SSE_INSTR_SET</strong> token to include the implementation file in the simd.hpp file:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>simd.hpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+</pre></td>
+  <td class="code"><pre>
+<span class="preprocessor">#include</span> <span class="error">“</span>nx_simd_config.hpp<span class="error">”</span>
+<span class="preprocessor">#if</span> SSE_INSTR_SET &amp;gt; <span class="integer">6</span>
+    <span class="preprocessor">#include</span> <span class="error">“</span>simd_avx.hpp<span class="error">”</span>
+<span class="preprocessor">#endif</span>
+<span class="preprocessor">#if</span> SSE_INSTR_SET &amp;gt; <span class="integer">0</span>
+    <span class="preprocessor">#include</span> <span class="error">“</span>simd_sse.hpp<span class="error">”</span>
+<span class="preprocessor">#endif</span>&lt;/p&gt;
+
+&lt;p&gt;<span class="comment">// Definition of traits and generic load and store functions</span>
+<span class="comment">// …</span>
+</pre></td>
+</tr></table>
+ </figure></notextile></div></p>
+
+<p>Now from the client code, the only file to include is simd.hpp, dans everything will be available.</p>
+
+<h3 id="going-further">4.4 Going further</h3>
+
+<p>Now that we have nice wrappers providing basic functionalities, what could be the next step ?
+Well, first we could add a method to retrieve an element in the vector:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>simd_base.hpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+<a href="#n14" name="n14">14</a>
+<a href="#n15" name="n15">15</a>
+<a href="#n16" name="n16">16</a>
+<a href="#n17" name="n17">17</a>
+<a href="#n18" name="n18">18</a>
+</pre></td>
+  <td class="code"><pre>
+<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">x</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt;
+    <span class="keyword">class</span> <span class="class">simd_vector</span>
+    {
+    <span class="directive">public</span>:&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    <span class="keyword">typedef</span> simd_vector_traits&amp;lt;X&amp;gt;::value_type value_type;
+
+    <span class="comment">// ...</span>
+
+    value_type <span class="directive">operator</span>[](size_t index) <span class="directive">const</span>
+    {
+        size_t size = simd_vector_traits&amp;lt;X&amp;gt;::size;
+        value_type v[size];
+        (*<span class="local-variable">this</span>)().store_u(v);
+        <span class="keyword">return</span> v[index];
+    }
+}; </pre></td>
+</tr></table>
+ </figure></notextile></div>
+</code></pre>
+
+<p>We can add horizontal add function, useful for linear algebra products:
+<div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>simd_sse.hpp</span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+</pre></td>
+  <td class="code"><pre>
+    <span class="directive">inline</span> <span class="predefined-type">float</span> hadd(<span class="directive">const</span> vector4f&amp;amp; rhs)
+    {
+    <span class="preprocessor">#if</span> SSE_INSTR_SET &amp;gt;= <span class="integer">3</span> <span class="comment">// SSE3</span>
+        __m128 tmp0 = _mm_hadd_ps(rhs,rhs);
+        __m128 tmp1 = _mm_hadd_ps(tmp0,tmp0);
+    <span class="preprocessor">#else</span>
+        __m128 tmp0 = _mm_add_ps(rhs,_mm_movehl_ps(rhs,rhs));
+        __m128 tmp1 = _mm_add_ss(tmp0,_mm_shuffle_ps(tmp0,tmp0,<span class="integer">1</span>));
+    <span class="preprocessor">#endif</span>
+        <span class="keyword">return</span> _mm_cvtss_f32(tmp1);
+    }
+</pre></td>
+</tr></table>
+ </figure></notextile></div></p>
+
+<p>Another usefull stuffs would be to write overloads of standard mathematical functions (exp, log, etc) that work
+with the wrappers.</p>
+
+<p>As you can see, writing the wrappers is just a beginning, you can then enrich them with whatever functionality
+you need but this goes beyond the topic of this series of articles.</p>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Writing C++ Wrappers for SIMD Intrinsics (4)]]></title>
@@ -425,7 +1112,7 @@ have a performance loss compared to the scalar code is if one of the conditional
 the other and its result is seldom used.</p>
 
 <p>Knowing this, let’s see how we can implement a select function taking SIMD wrappers parameters. Depending on the SSE version,
-the compiler may provide a built-in function we can directly use as a ternary operator. If not, we have to handle it with old
+the compiler may provide a built-in function we can directly use as ternary operator. If not, we have to handle it with old
 bitwise logical:</p>
 
 <p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>sample.cpp </span></figcaption>
@@ -439,10 +1126,12 @@ bitwise logical:</p>
 <a href="#n7" name="n7">7</a>
 <a href="#n8" name="n8">8</a>
 <a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
 </pre></td>
   <td class="code"><pre>
 vector4f select(<span class="directive">const</span> vector4fb&amp;amp; cond, <span class="directive">const</span> vector4f&amp;amp; a, <span class="directive">const</span> vector4f&amp;amp; b)
 {
+<span class="comment">// Don’t bother with the SSE_INSTR_SET preprocessor token, we’ll be back ont it later</span>
 <span class="preprocessor">#if</span> SSE_INSTR_SET &amp;gt;= <span class="integer">5</span> <span class="comment">// SSE 4.1</span>
     <span class="keyword">return</span> _mm_blendv_ps(b,a,cond);
 <span class="preprocessor">#else</span>
@@ -1391,7 +2080,7 @@ operators :</p>
 type. If these operators were implemented for vector4f, we would have return vector4fb; but since
 they are implemented for the base class, they need to return the boolean wrapper related to the
 arithmetic wrapper, i.e the inheriting class. What we need here is to provide a mapping between
-arithmetic wrapper type and boolean wrapper type somewhere. Remeber the simd_vector_traits structure
+arithmetic wrapper type and boolean wrapper type somewhere. Remember the simd_vector_traits structure
 we declared to define our value_type ? It would be the perfect place for defining that mapping :</p>
 
 <p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>simd_sse.hpp</span></figcaption>
