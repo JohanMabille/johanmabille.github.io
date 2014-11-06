@@ -4,7 +4,7 @@
   <title><![CDATA[Category: CodeProject | The C++ scientist]]></title>
   <link href="http://jmabille.github.io/blog/categories/codeproject/atom.xml" rel="self"/>
   <link href="http://jmabille.github.io/"/>
-  <updated>2014-11-04T20:46:46+01:00</updated>
+  <updated>2014-11-06T01:38:23+01:00</updated>
   <id>http://jmabille.github.io/</id>
   <author>
     <name><![CDATA[Johan Mabille]]></name>
@@ -67,7 +67,7 @@ instruction set, that is, the vector type and its size (the number of scalars it
 talking about selecting a type depending on another one, the first thing that comes to mind is type traits. Here our traits
 must contain the wrapper type and its size depending on the scalar type used:</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>simd_vector_traits.hpp </span></figcaption>
+<p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>simd_traits.hpp </span></figcaption>
  <table class="CodeRay"><tr>
   <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
 <a href="#n2" name="n2">2</a>
@@ -79,7 +79,7 @@ must contain the wrapper type and its size depending on the scalar type used:</p
 </pre></td>
   <td class="code"><pre>
 <span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">t</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt;
-    <span class="keyword">struct</span> simd_vector_traits
+    <span class="keyword">struct</span> simd_traits
     {
         <span class="keyword">typedef</span> T type;
         <span class="directive">static</span> <span class="directive">const</span> size_t size = <span class="integer">1</span>;
@@ -130,28 +130,28 @@ class will look like:</p>
   <td class="code"><pre>
 <span class="preprocessor">#ifdef</span> USE_SSE
 <span class="keyword">template</span> &amp;lt;&amp;gt;
-    <span class="keyword">struct</span> simd_vector_traits&lt;<span class="predefined-type">float</span>&gt;
+    <span class="keyword">struct</span> simd_traits&lt;<span class="predefined-type">float</span>&gt;
     {
         <span class="keyword">typedef</span> vector4f type;
         <span class="directive">static</span> <span class="directive">const</span> size_t size = <span class="integer">4</span>;
     };&lt;/<span class="predefined-type">float</span>&gt;&lt;/p&gt;
 
 &lt;p&gt;<span class="keyword">template</span> &amp;lt;&amp;gt;
-    <span class="keyword">struct</span> simd_vector_traits&lt;<span class="predefined-type">double</span>&gt;
+    <span class="keyword">struct</span> simd_traits&lt;<span class="predefined-type">double</span>&gt;
     {
         <span class="keyword">typedef</span> vector2d type;
         <span class="directive">static</span> <span class="directive">const</span> size_t size = <span class="integer">2</span>;
     };
 <span class="preprocessor">#elif</span> USE_AVX
 <span class="keyword">template</span> &amp;lt;&amp;gt;
-    <span class="keyword">struct</span> simd_vector_traits&lt;<span class="predefined-type">float</span>&gt;
+    <span class="keyword">struct</span> simd_traits&lt;<span class="predefined-type">float</span>&gt;
     {
         <span class="keyword">typedef</span> vector8f type;
         <span class="directive">static</span> <span class="directive">const</span> size_t size = <span class="integer">8</span>;
     };&lt;/<span class="predefined-type">float</span>&gt;&lt;/<span class="predefined-type">double</span>&gt;&lt;/p&gt;
 
 &lt;p&gt;<span class="keyword">template</span> &amp;lt;&amp;gt;
-    <span class="keyword">struct</span> simd_vector_traits&lt;<span class="predefined-type">double</span>&gt;
+    <span class="keyword">struct</span> simd_traits&lt;<span class="predefined-type">double</span>&gt;
     {
         <span class="keyword">typedef</span> vector4d type;
         <span class="directive">static</span> <span class="directive">const</span> size_t size = <span class="integer">4</span>;
@@ -183,8 +183,8 @@ class will look like:</p>
   <td class="code"><pre>
 std::vector&lt;<span class="predefined-type">float</span>&gt; a,b,c,d,e;
 <span class="comment">// ... resize a, b, c, d, and e so they hold n elements</span>
-<span class="keyword">typedef</span> simd_vector_traits&lt;<span class="predefined-type">float</span>&gt;::type vec_type;
-size_t vec_size = simd_vector_traits&lt;<span class="predefined-type">float</span>&gt;::size;
+<span class="keyword">typedef</span> simd_traits&lt;<span class="predefined-type">float</span>&gt;::type vec_type;
+size_t vec_size = simd_traits&lt;<span class="predefined-type">float</span>&gt;::size;
 <span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &amp;lt; n/vec_size; i += vec_size)
 {
     vec_type av; av.load_a(&amp;amp;a[i]);
@@ -310,7 +310,7 @@ uniform way. Calling the generic functions would look like:</p>
 <a href="#n3" name="n3">3</a>
 </pre></td>
   <td class="code"><pre>
-<span class="keyword">typedef</span> simd_vector_traits&lt;<span class="predefined-type">float</span>&gt;::simd_type vec_type;
+<span class="keyword">typedef</span> simd_traits&lt;<span class="predefined-type">float</span>&gt;::simd_type vec_type;
 vec_type va = simd_functions_invoker&amp;lt;<span class="predefined-type">float</span>,vec_type&amp;gt;::load_a(a);
 </pre></td>
 </tr></table>
@@ -342,25 +342,25 @@ vec_type va = simd_functions_invoker&amp;lt;<span class="predefined-type">float<
 <strong><a href="#n20" name="n20">20</a></strong>
 </pre></td>
   <td class="code"><pre>
-<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">t</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt; <span class="directive">inline</span> <span class="keyword">typename</span> simd_vector_traits&lt;t&gt;::type
+<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">t</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt; <span class="directive">inline</span> <span class="keyword">typename</span> simd_traits&lt;t&gt;::type
 set1(<span class="directive">const</span> T&amp;amp; a)
-{ <span class="keyword">return</span> simd_functions_invoker&amp;lt;T,<span class="keyword">typename</span> simd_vector_traits&lt;t&gt;::type&amp;gt;::set1(a); }&lt;/t&gt;&lt;/t&gt;&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
+{ <span class="keyword">return</span> simd_functions_invoker&amp;lt;T,<span class="keyword">typename</span> simd_traits&lt;t&gt;::type&amp;gt;::set1(a); }&lt;/t&gt;&lt;/t&gt;&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
 
-&lt;p&gt;<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">t</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt; <span class="directive">inline</span> <span class="keyword">typename</span> simd_vector_traits&lt;t&gt;::type
+&lt;p&gt;<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">t</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt; <span class="directive">inline</span> <span class="keyword">typename</span> simd_traits&lt;t&gt;::type
 load_a(<span class="directive">const</span> T* src)
-{ <span class="keyword">return</span> simd_functions_invoker&amp;lt;T,<span class="keyword">typename</span> simd_vector_traits&lt;t&gt;::type&amp;gt;::load_a(src); }&lt;/t&gt;&lt;/t&gt;&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
+{ <span class="keyword">return</span> simd_functions_invoker&amp;lt;T,<span class="keyword">typename</span> simd_traits&lt;t&gt;::type&amp;gt;::load_a(src); }&lt;/t&gt;&lt;/t&gt;&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
 
-&lt;p&gt;<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">t</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt; <span class="directive">inline</span> <span class="keyword">typename</span> simd_vector_traits&lt;t&gt;::type
+&lt;p&gt;<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">t</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt; <span class="directive">inline</span> <span class="keyword">typename</span> simd_traits&lt;t&gt;::type
 load_u(<span class="directive">const</span> T* src)
-{ <span class="keyword">return</span> simd_functions_invoker&amp;lt;T,<span class="keyword">typename</span> simd_vector_traits&lt;t&gt;::type&amp;gt;::load_u(src); }&lt;/t&gt;&lt;/t&gt;&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
+{ <span class="keyword">return</span> simd_functions_invoker&amp;lt;T,<span class="keyword">typename</span> simd_traits&lt;t&gt;::type&amp;gt;::load_u(src); }&lt;/t&gt;&lt;/t&gt;&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
 
 &lt;p&gt;<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">t</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt; <span class="directive">inline</span> <span class="directive">void</span>
-store_a(T* dst, <span class="directive">const</span> <span class="keyword">typename</span> simd_vector_traits&lt;t&gt;::type&amp;amp; src)
-{ simd_functions_invoker&amp;lt;T,<span class="keyword">typename</span> simd_vector_traits&lt;t&gt;::type&amp;gt;::store_a(dst,src); }&lt;/t&gt;&lt;/t&gt;&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
+store_a(T* dst, <span class="directive">const</span> <span class="keyword">typename</span> simd_traits&lt;t&gt;::type&amp;amp; src)
+{ simd_functions_invoker&amp;lt;T,<span class="keyword">typename</span> simd_traits&lt;t&gt;::type&amp;gt;::store_a(dst,src); }&lt;/t&gt;&lt;/t&gt;&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
 
 &lt;p&gt;<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">t</span>=<span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>&gt; <span class="directive">inline</span> <span class="directive">void</span>
-store_u(T* dst, <span class="directive">const</span> <span class="keyword">typename</span> simd_vector_traits&lt;t&gt;::type&amp;amp; src)
-{ simd_functions_invoker&amp;lt;T,<span class="keyword">typename</span> simd_vector_traits&lt;t&gt;::type&amp;gt;::store_u(dst,src); }
+store_u(T* dst, <span class="directive">const</span> <span class="keyword">typename</span> simd_traits&lt;t&gt;::type&amp;amp; src)
+{ simd_functions_invoker&amp;lt;T,<span class="keyword">typename</span> simd_traits&lt;t&gt;::type&amp;gt;::store_u(dst,src); }
 </pre></td>
 </tr></table>
  </figure></notextile></div></t></t></class></p>
@@ -388,8 +388,8 @@ which don’t support vectorization:</p>
   <td class="code"><pre>
 std::vector&lt;<span class="predefined-type">float</span>&gt; a,b,c,d,e;
 <span class="comment">// ... resize a, b, c, d, and e so they hold n elements</span>
-<span class="keyword">typedef</span> simd_vector_traits&lt;<span class="predefined-type">float</span>&gt;::type vec_type;
-size_t vec_size = simd_vector_traits&lt;<span class="predefined-type">float</span>&gt;::size;
+<span class="keyword">typedef</span> simd_traits&lt;<span class="predefined-type">float</span>&gt;::type vec_type;
+size_t vec_size = simd_traits&lt;<span class="predefined-type">float</span>&gt;::size;
 <span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &amp;lt; n/vec_size; i += vec_size)
 {
     vec_type av = load_a(&amp;amp;a[i]);
@@ -423,8 +423,8 @@ store_a(&amp;amp;e[i],ev); } <span class="comment">// Remaining part of the loop
   <td class="code"><pre>
 std::vector&lt;<span class="predefined-type">float</span>&gt; a,b,c,d,e;
 <span class="comment">// ... resize a, b, c, d, and e so they hold n elements</span>
-<span class="keyword">typedef</span> simd_vector_traits&lt;<span class="predefined-type">float</span>&gt;::type vec_type;
-size_t vec_size = simd_vector_traits&lt;<span class="predefined-type">float</span>&gt;::size;
+<span class="keyword">typedef</span> simd_traits&lt;<span class="predefined-type">float</span>&gt;::type vec_type;
+size_t vec_size = simd_traits&lt;<span class="predefined-type">float</span>&gt;::size;
 <span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &amp;lt; n/vec_size; i += vec_size)
 {
     vec_type ev = load_a(&amp;amp;a[i])*load_a(&amp;amp;b[i]) + load_a(&amp;amp;c[i])*load_a(&amp;amp;d[i]));
@@ -595,7 +595,7 @@ can also use the <strong>SSE_INSTR_SET</strong> token to include the implementat
 <a href="#n11" name="n11">11</a>
 </pre></td>
   <td class="code"><pre>
-<span class="preprocessor">#include</span> <span class="error">“</span>nx_simd_config.hpp<span class="error">”</span>
+<span class="preprocessor">#include</span> <span class="error">“</span>simd_config.hpp<span class="error">”</span>
 <span class="preprocessor">#if</span> SSE_INSTR_SET &amp;gt; <span class="integer">6</span>
     <span class="preprocessor">#include</span> <span class="error">“</span>simd_avx.hpp<span class="error">”</span>
 <span class="preprocessor">#endif</span>
@@ -643,13 +643,13 @@ Well, first we could add a method to retrieve an element in the vector:</p>
     {
     <span class="directive">public</span>:&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;    <span class="keyword">typedef</span> simd_vector_traits&amp;lt;X&amp;gt;::value_type value_type;
+&lt;pre&gt;&lt;code&gt;    <span class="keyword">typedef</span> simd_traits&amp;lt;X&amp;gt;::value_type value_type;
 
     <span class="comment">// ...</span>
 
     value_type <span class="directive">operator</span>[](size_t index) <span class="directive">const</span>
     {
-        size_t size = simd_vector_traits&amp;lt;X&amp;gt;::size;
+        size_t size = simd_traits&amp;lt;X&amp;gt;::size;
         value_type v[size];
         (*<span class="local-variable">this</span>)().store_u(v);
         <span class="keyword">return</span> v[index];
@@ -2107,12 +2107,12 @@ we declared to define our value_type ? It would be the perfect place for definin
 <span class="comment">// (remember we use simd_vector_traits&lt;x&gt;::value_type in the definition of simd_vector).</span>
 <span class="keyword">class</span> <span class="class">vector4f</span>;&lt;/x&gt;&lt;/vector4f&gt;&lt;/p&gt;
 
-&lt;p&gt;<span class="comment">// Full specialization of the template vector_simd_traits declared in simd_base.hpp</span>
+&lt;p&gt;<span class="comment">// Full specialization of the template simd_vector_traits declared in simd_base.hpp</span>
 <span class="keyword">template</span> &amp;lt;&amp;gt;
-    <span class="keyword">struct</span> vector_simd_traits&lt;vector4f&gt;
+    <span class="keyword">struct</span> simd_vector_traits&lt;vector4f&gt;
     {
         <span class="keyword">typedef</span> <span class="predefined-type">float</span> value_type;
-        <span class="keyword">typedef</span> simd_vector4fb vetor_bool;
+        <span class="keyword">typedef</span> simd_vector4fb vector_bool;
     };&lt;/vector4f&gt;&lt;/p&gt;
 
 &lt;p&gt;<span class="keyword">class</span> <span class="class">vector4f</span>
@@ -2122,7 +2122,7 @@ we declared to define our value_type ? It would be the perfect place for definin
 </tr></table>
  </figure></notextile></div></p>
 
-<p>A last remark before we add the last comparison operators : since the template vector_simd_traits
+<p>A last remark before we add the last comparison operators : since the template simd_vector_traits
 will never be defined but full specialized instead, there is no risk we forget to define it when
 we add a new wrapper, we’ll have a compilation error.</p>
 

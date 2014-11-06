@@ -1013,12 +1013,12 @@ we declared to define our value_type ? It would be the perfect place for definin
 <span class="comment">// (remember we use simd_vector_traits&lt;X&gt;::value_type in the definition of simd_vector).</span>
 <span class="keyword">class</span> <span class="class">vector4f</span>;
 
-<span class="comment">// Full specialization of the template vector_simd_traits declared in simd_base.hpp</span>
+<span class="comment">// Full specialization of the template simd_vector_traits declared in simd_base.hpp</span>
 <span class="keyword">template</span> &lt;&gt;
-    <span class="keyword">struct</span> vector_simd_traits&lt;vector4f&gt;
+    <span class="keyword">struct</span> simd_vector_traits&lt;vector4f&gt;
     {
         <span class="keyword">typedef</span> <span class="predefined-type">float</span> value_type;
-        <span class="keyword">typedef</span> simd_vector4fb vetor_bool;
+        <span class="keyword">typedef</span> simd_vector4fb vector_bool;
     };
 
 <span class="keyword">class</span> <span class="class">vector4f</span>
@@ -1028,7 +1028,7 @@ we declared to define our value_type ? It would be the perfect place for definin
 </tr></table>
  </figure></notextile></div>
 
-<p>A last remark before we add the last comparison operators : since the template vector_simd_traits
+<p>A last remark before we add the last comparison operators : since the template simd_vector_traits
 will never be defined but full specialized instead, there is no risk we forget to define it when
 we add a new wrapper, we’ll have a compilation error.</p>
 
