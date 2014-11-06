@@ -40,9 +40,9 @@ Basically, we want to be able to select the right wrapper depending on the scala
 talking about selecting a type depending on another one, the first thing that comes to mind is type traits. Here our traits
 must contain the wrapper type and its size depending on the scalar type used:
 
-{% coderay lang:cpp simd_vector_traits.hpp %}
+{% coderay lang:cpp simd_traits.hpp %}
 template <class T>
-	struct simd_vector_traits
+	struct simd_traits
 	{
 		typedef T type;
 		static const size_t size = 1;
@@ -58,28 +58,28 @@ class will look like:
 {% coderay lang:cpp simd.hpp%}
 #ifdef USE_SSE
 template <>
-	struct simd_vector_traits<float>
+	struct simd_traits<float>
 	{
 		typedef vector4f type;
 		static const size_t size = 4;
 	};
 
 template <>
-	struct simd_vector_traits<double>
+	struct simd_traits<double>
 	{
 		typedef vector2d type;
 		static const size_t size = 2;
 	};
 #elif USE_AVX
 template <>
-	struct simd_vector_traits<float>
+	struct simd_traits<float>
 	{
 		typedef vector8f type;
 		static const size_t size = 8;
 	};
 
 template <>
-	struct simd_vector_traits<double>
+	struct simd_traits<double>
 	{
 		typedef vector4d type;
 		static const size_t size = 4;
@@ -92,8 +92,8 @@ Now we can adapt the loop so it doesn't explicitly refer to the vector4f type:
 {% coderay sample.cpp %}
 std::vector<float> a,b,c,d,e;
 // ... resize a, b, c, d, and e so they hold n elements
-typedef simd_vector_traits<float>::type vec_type;
-size_t vec_size = simd_vector_traits<float>::size;
+typedef simd_traits<float>::type vec_type;
+size_t vec_size = simd_traits<float>::size;
 for(size_t i = 0; i < n/vec_size; i += vec_size)
 {
 	vec_type av; av.load_a(&a[i]);
@@ -167,32 +167,32 @@ We've added the set1 function so we can intialize wrappers and scalar type from 
 uniform way. Calling the generic functions would look like:
 
 {% coderay sample.cpp %}
-typedef simd_vector_traits<float>::simd_type vec_type;
+typedef simd_traits<float>::simd_type vec_type;
 vec_type va = simd_functions_invoker<float,vec_type>::load_a(a);
 {% endcoderay %}
 
 That's too much verbose. Let's add facade functions that deduce template parameters for us:
 
 {% coderay lang:cpp simd.hpp %}
-template <class T> inline typename simd_vector_traits<T>::type
+template <class T> inline typename simd_traits<T>::type
 set1(const T& a)
-{ return simd_functions_invoker<T,typename simd_vector_traits<T>::type>::set1(a); }
+{ return simd_functions_invoker<T,typename simd_traits<T>::type>::set1(a); }
 
-template <class T> inline typename simd_vector_traits<T>::type
+template <class T> inline typename simd_traits<T>::type
 load_a(const T* src)
-{ return simd_functions_invoker<T,typename simd_vector_traits<T>::type>::load_a(src); }
+{ return simd_functions_invoker<T,typename simd_traits<T>::type>::load_a(src); }
 
-template <class T> inline typename simd_vector_traits<T>::type
+template <class T> inline typename simd_traits<T>::type
 load_u(const T* src)
-{ return simd_functions_invoker<T,typename simd_vector_traits<T>::type>::load_u(src); }
+{ return simd_functions_invoker<T,typename simd_traits<T>::type>::load_u(src); }
 
 template <class T> inline void
-store_a(T* dst, const typename simd_vector_traits<T>::type& src)
-{ simd_functions_invoker<T,typename simd_vector_traits<T>::type>::store_a(dst,src); }
+store_a(T* dst, const typename simd_traits<T>::type& src)
+{ simd_functions_invoker<T,typename simd_traits<T>::type>::store_a(dst,src); }
 
 template <class T> inline void
-store_u(T* dst, const typename simd_vector_traits<T>::type& src)
-{ simd_functions_invoker<T,typename simd_vector_traits<T>::type>::store_u(dst,src); }
+store_u(T* dst, const typename simd_traits<T>::type& src)
+{ simd_functions_invoker<T,typename simd_traits<T>::type>::store_u(dst,src); }
 {% endcoderay %}
 
 Now we can use these generic functions in the previous loop so it works with any type, even those
@@ -201,8 +201,8 @@ which don't support vectorization:
 {% coderay sample.cpp %}
 std::vector<float> a,b,c,d,e;
 // ... resize a, b, c, d, and e so they hold n elements
-typedef simd_vector_traits<float>::type vec_type;
-size_t vec_size = simd_vector_traits<float>::size;
+typedef simd_traits<float>::type vec_type;
+size_t vec_size = simd_traits<float>::size;
 for(size_t i = 0; i < n/vec_size; i += vec_size)
 {
 	vec_type av = load_a(&a[i]);
@@ -222,8 +222,8 @@ Or, if you want to be more concise:
 {% coderay sample.cpp %}
 std::vector<float> a,b,c,d,e;
 // ... resize a, b, c, d, and e so they hold n elements
-typedef simd_vector_traits<float>::type vec_type;
-size_t vec_size = simd_vector_traits<float>::size;
+typedef simd_traits<float>::type vec_type;
+size_t vec_size = simd_traits<float>::size;
 for(size_t i = 0; i < n/vec_size; i += vec_size)
 {
 	vec_type ev = load_a(&a[i])*load_a(&b[i]) + load_a(&c[i])*load_a(&d[i]));
@@ -314,7 +314,7 @@ Note that if you split the implementation of SSE wrappers and AVX wrappers into 
 can also use the **SSE\_INSTR\_SET** token to include the implementation file in the simd.hpp file:
 
 {% coderay lang:cpp simd.hpp %}
-#include "nx_simd_config.hpp"
+#include "simd_config.hpp"
 #if SSE_INSTR_SET > 6
     #include "simd_avx.hpp"
 #endif
@@ -339,13 +339,13 @@ template <class X>
 	{
 	public:
 
-		typedef simd_vector_traits<X>::value_type value_type;
+		typedef simd_traits<X>::value_type value_type;
 
 		// ...
 
 		value_type operator[](size_t index) const
 		{
-			size_t size = simd_vector_traits<X>::size;
+			size_t size = simd_traits<X>::size;
 			value_type v[size];
 			(*this)().store_u(v);
 			return v[index];
