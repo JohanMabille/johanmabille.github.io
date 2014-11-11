@@ -16,7 +16,7 @@ std::vector<float> a, b, c, d, e
 for(size_t i = 0; i < n/4; i+=4)
 {
 	vector4f av; av.load_a(&a[i]);
-	vector4f bv; bv.load_a(&b[i));
+	vector4f bv; bv.load_a(&b[i]);
 	vector4f cv; cv.load_a(&c[i]);
 	vector4f dv; dv.load_a(&d[i]);
 
@@ -97,7 +97,7 @@ size_t vec_size = simd_traits<float>::size;
 for(size_t i = 0; i < n/vec_size; i += vec_size)
 {
 	vec_type av; av.load_a(&a[i]);
-	vec_type bv; bv.load_a(&b[i));
+	vec_type bv; bv.load_a(&b[i]);
 	vec_type cv; cv.load_a(&c[i]);
 	vec_type dv; dv.load_a(&d[i]);
 
@@ -206,7 +206,7 @@ size_t vec_size = simd_traits<float>::size;
 for(size_t i = 0; i < n/vec_size; i += vec_size)
 {
 	vec_type av = load_a(&a[i]);
-	vec_type bv = load_a(&b[i));
+	vec_type bv = load_a(&b[i]);
 	vec_type cv = load_a(&c[i]);
 	vec_type dv = load_a(&d[i]);
 
