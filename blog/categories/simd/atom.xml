@@ -4,7 +4,7 @@
   <title><![CDATA[Category: SIMD | The C++ scientist]]></title>
   <link href="http://jmabille.github.io/blog/categories/simd/atom.xml" rel="self"/>
   <link href="http://jmabille.github.io/"/>
-  <updated>2014-11-06T01:38:23+01:00</updated>
+  <updated>2014-11-12T00:03:52+01:00</updated>
   <id>http://jmabille.github.io/</id>
   <author>
     <name><![CDATA[Johan Mabille]]></name>
@@ -264,10 +264,10 @@ specialization is not possible for functions, let’s wrap them into a simd_func
         set1(<span class="directive">const</span> T&amp;amp; a) { <span class="keyword">return</span> V(a); }&lt;/p&gt;
 
 &lt;pre&gt;&lt;code&gt;    <span class="directive">inline</span> <span class="directive">static</span> V
-    load_a(<span class="directive">const</span> T* src) { V res; res.load_a(src); }
+    load_a(<span class="directive">const</span> T* src) { V res; res.load_a(src); <span class="keyword">return</span> res; }
 
     <span class="directive">inline</span> <span class="directive">static</span> V
-    load_u(<span class="directive">const</span> T* src) { V res; res.load_u(src); }
+    load_u(<span class="directive">const</span> T* src) { V res; res.load_u(src); <span class="keyword">return</span> res; }
 
     <span class="directive">inline</span> <span class="directive">static</span> <span class="directive">void</span>
     store_a(T* dst, <span class="directive">const</span> V&amp;amp; src) { src.store_a(dst); }
