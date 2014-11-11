@@ -130,10 +130,10 @@ template <class T, class V>
 		set1(const T& a) { return V(a); }
 
 		inline static V
-		load_a(const T* src) { V res; res.load_a(src); }
+		load_a(const T* src) { V res; res.load_a(src); return res; }
 
 		inline static V
-		load_u(const T* src) { V res; res.load_u(src); }
+		load_u(const T* src) { V res; res.load_u(src); return res; }
 
 		inline static void
 		store_a(T* dst, const V& src) { src.store_a(dst); }
