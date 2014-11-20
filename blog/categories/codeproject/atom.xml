@@ -4,7 +4,7 @@
   <title><![CDATA[Category: CodeProject | The C++ scientist]]></title>
   <link href="http://jmabille.github.io/blog/categories/codeproject/atom.xml" rel="self"/>
   <link href="http://jmabille.github.io/"/>
-  <updated>2014-11-20T01:53:33+01:00</updated>
+  <updated>2014-11-20T02:12:17+01:00</updated>
   <id>http://jmabille.github.io/</id>
   <author>
     <name><![CDATA[Johan Mabille]]></name>
@@ -1756,6 +1756,10 @@ instantiate the code. But type resolution is different and you have to define it
 This is one reason for the existence of the simd_vector_traits class. Other reasons will be discussed in a later
 section. Note the class containing the type definition doesn’t have to be fully defined at this point : a simple
 forward declaration is sufficient.</p>
+
+<p><strong>EDIT 20/11/2014:</strong> it seems the CRTP layer introduces a slight overhead (at least with GCC), see this
+<a href="http://jmabille.github.io/blog/2014/11/20/performance-considerations-about-simd-wrappers/">article</a> for more
+details and an alternative solution.</p>
 
 <h3 id="comparison-operators">2.5 Comparison operators</h3>
 

@@ -667,6 +667,10 @@ This is one reason for the existence of the simd_vector_traits class. Other reas
 section. Note the class containing the type definition doesn’t have to be fully defined at this point : a simple
 forward declaration is sufficient.</p>
 
+<p><strong>EDIT 20/11/2014:</strong> it seems the CRTP layer introduces a slight overhead (at least with GCC), see this
+<a href="http://jmabille.github.io/blog/2014/11/20/performance-considerations-about-simd-wrappers/">article</a> for more
+details and an alternative solution.</p>
+
 <h3 id="comparison-operators">2.5 Comparison operators</h3>
 
 <p>Since ordinary comparison operators return boolean value, we need to implement SIMD wrappers for boolean. The
