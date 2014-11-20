@@ -176,15 +176,15 @@ for(size_t i = n/4; i < n; ++i)
 Now, if we migrate our code from SSE to AVX, all we have to do is to replace vector4f by vector8f! (Ok, we also have to deal
 with memory alignment issues, I come back to this in a few moments). We'll see in a future section how we can avoid the explicit
 usage of vector4f so we get full genericity. But for now, we have to face a last problem: in the sample code, we assumed the
-memory buffer wrapped by std::vector was 16-bytes aligned. How do we know a memory allocation is aligned, and how do we know the
-boundary alignment ?
+memory buffer wrapped by std::vector was 16-bytes aligned. <a name="simd_memory_allocator"></a>How do we know a memory allocation
+is aligned, and how do we know the boundary alignment ?
 
 The answer is it depends on your system and your compiler. On Windows 64 bits, dynamic memory allocation is 16-bytes aligned; in GNU
 systems, a block returned by malloc or realloc is always a multiple of 8 (32-bit systems) or 16 (64-bit system). So if we want to
 write code generic enough to handle many SIMD instruction set, it's clear we must provide a way to ensure memory allocation is
 always aligned, and is aligned on a given boundary.
 
-<a name="simd_memory_allocator"></a>The solution is to design an aligned memory allocator and to use it in std::vector:
+The solution is to design an aligned memory allocator and to use it in std::vector:
 
 {% coderay sample.cpp %}
 typedef aligned_allocator<16> simd_allocator;

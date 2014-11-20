@@ -365,7 +365,7 @@ To conclude, operators overloads don't prevent the compiler to reorder instructi
 
 ##5. Refactoring the wrappers without CRTP
 
-Before we consider refactoring the wrappers, let's see the overhead of the CRTP layer in a more realistic code. Using the **test\_sse\_d** and **test\_sse\_e** functions of the previous sectino with the first versino of the wrappers (the one with CRTP), here is the result of objdump:
+Before we consider refactoring the wrappers, let's see the overhead of the CRTP layer in a more realistic code. Using the **test\_sse\_d** and **test\_sse\_e** functions of the previous section with the first version of the wrappers (the one with CRTP), here is the result of objdump:
 
 {% coderay lang:cpp test_sse.asm %}
 // test_sse_d
