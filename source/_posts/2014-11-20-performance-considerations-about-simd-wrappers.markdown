@@ -3,7 +3,7 @@ layout: post
 title: "Performance considerations about SIMD wrappers"
 date: 2014-11-20 01:39:57 +0100
 comments: true
-categories: [CodeProject,SIMD,Vectorization]
+categories: [SIMD,Vectorization]
 ---
 
 When I posted a link to this blog on [reddit](http://www.reddit.com/r/cpp/comments/2laltn/ths_c_scientist_blog_is_born/),
