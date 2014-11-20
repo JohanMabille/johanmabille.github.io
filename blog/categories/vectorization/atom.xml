@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Vectorization | The C++ scientist]]></title>
   <link href="http://jmabille.github.io/blog/categories/vectorization/atom.xml" rel="self"/>
   <link href="http://jmabille.github.io/"/>
-  <updated>2014-11-20T02:12:17+01:00</updated>
+  <updated>2014-11-20T19:30:15+01:00</updated>
   <id>http://jmabille.github.io/</id>
   <author>
     <name><![CDATA[Johan Mabille]]></name>
@@ -692,7 +692,7 @@ vector4f test_sse_b(vector4f a, vector4f b, vector4f c, vector4f d)
 
 <h2 id="refactoring-the-wrappers-without-crtp">5. Refactoring the wrappers without CRTP</h2>
 
-<p>Before we consider refactoring the wrappers, let’s see the overhead of the CRTP layer in a more realistic code. Using the <strong>test_sse_d</strong> and <strong>test_sse_e</strong> functions of the previous sectino with the first versino of the wrappers (the one with CRTP), here is the result of objdump:</p>
+<p>Before we consider refactoring the wrappers, let’s see the overhead of the CRTP layer in a more realistic code. Using the <strong>test_sse_d</strong> and <strong>test_sse_e</strong> functions of the previous section with the first version of the wrappers (the one with CRTP), here is the result of objdump:</p>
 
 <p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>test_sse.asm </span></figcaption>
  <table class="CodeRay"><tr>
@@ -1838,15 +1838,15 @@ e[i] = a[i]*b[i] + c[i]*d[i]; } </pre></td>
 <p>Now, if we migrate our code from SSE to AVX, all we have to do is to replace vector4f by vector8f! (Ok, we also have to deal
 with memory alignment issues, I come back to this in a few moments). We’ll see in a future section how we can avoid the explicit
 usage of vector4f so we get full genericity. But for now, we have to face a last problem: in the sample code, we assumed the
-memory buffer wrapped by std::vector was 16-bytes aligned. How do we know a memory allocation is aligned, and how do we know the
-boundary alignment ?</p>
+memory buffer wrapped by std::vector was 16-bytes aligned. <a name="simd_memory_allocator"></a>How do we know a memory allocation
+is aligned, and how do we know the boundary alignment ?</p>
 
 <p>The answer is it depends on your system and your compiler. On Windows 64 bits, dynamic memory allocation is 16-bytes aligned; in GNU
 systems, a block returned by malloc or realloc is always a multiple of 8 (32-bit systems) or 16 (64-bit system). So if we want to
 write code generic enough to handle many SIMD instruction set, it’s clear we must provide a way to ensure memory allocation is
 always aligned, and is aligned on a given boundary.</p>
 
-<p><a name="simd_memory_allocator"></a>The solution is to design an aligned memory allocator and to use it in std::vector:</p>
+<p>The solution is to design an aligned memory allocator and to use it in std::vector:</p>
 
 <p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>sample.cpp </span></figcaption>
  <table class="CodeRay"><tr>

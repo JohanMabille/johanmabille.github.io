@@ -784,7 +784,7 @@ vector4f2 test_sse_c2(vector4f2 a, vector4f2 b, vector4f2 c, vector4f2 d)
 
 <h2 id="refactoring-the-wrappers-without-crtp">5. Refactoring the wrappers without CRTP</h2>
 
-<p>Before we consider refactoring the wrappers, let’s see the overhead of the CRTP layer in a more realistic code. Using the <strong>test_sse_d</strong> and <strong>test_sse_e</strong> functions of the previous sectino with the first versino of the wrappers (the one with CRTP), here is the result of objdump:</p>
+<p>Before we consider refactoring the wrappers, let’s see the overhead of the CRTP layer in a more realistic code. Using the <strong>test_sse_d</strong> and <strong>test_sse_e</strong> functions of the previous section with the first version of the wrappers (the one with CRTP), here is the result of objdump:</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>test_sse.asm </span></figcaption>
  <table class="CodeRay"><tr>
