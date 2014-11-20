@@ -4,7 +4,7 @@
   <title><![CDATA[Category: SIMD | The C++ scientist]]></title>
   <link href="http://jmabille.github.io/blog/categories/simd/atom.xml" rel="self"/>
   <link href="http://jmabille.github.io/"/>
-  <updated>2014-11-20T01:43:16+01:00</updated>
+  <updated>2014-11-20T01:51:38+01:00</updated>
   <id>http://jmabille.github.io/</id>
   <author>
     <name><![CDATA[Johan Mabille]]></name>
@@ -14,10 +14,10 @@
 
   
   <entry>
-    <title type="html"><![CDATA[Performance Considerations Aboud SIMD Wrappers]]></title>
-    <link href="http://jmabille.github.io/blog/2014/11/20/performance-considerations-aboud-simd-wrappers/"/>
+    <title type="html"><![CDATA[Performance Considerations About SIMD Wrappers]]></title>
+    <link href="http://jmabille.github.io/blog/2014/11/20/performance-considerations-about-simd-wrappers/"/>
     <updated>2014-11-20T01:39:57+01:00</updated>
-    <id>http://jmabille.github.io/blog/2014/11/20/performance-considerations-aboud-simd-wrappers</id>
+    <id>http://jmabille.github.io/blog/2014/11/20/performance-considerations-about-simd-wrappers</id>
     <content type="html"><![CDATA[<p>When I posted a link to this blog on <a href="http://www.reddit.com/r/cpp/comments/2laltn/ths_c_scientist_blog_is_born/">reddit</a>,
 I had comments from people who were skeptical of the <a href="http://jmabille.github.io/blog/2014/10/09/writing-c-plus-plus-wrappers-for-simd-intrinsics-1/">SIMD Wrappers</a>
 performances. They raised many possible performance hits in the implementation:</p>
