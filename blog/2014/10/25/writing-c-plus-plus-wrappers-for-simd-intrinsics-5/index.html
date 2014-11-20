@@ -134,7 +134,7 @@ std::vector&lt;<span class="predefined-type">float</span>&gt; a, b, c, d, e
 <span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &lt; n/<span class="integer">4</span>; i+=<span class="integer">4</span>)
 {
     vector4f av; av.load_a(&amp;a[i]);
-    vector4f bv; bv.load_a(&amp;b[i));
+    vector4f bv; bv.load_a(&amp;b[i]);
     vector4f cv; cv.load_a(&amp;c[i]);
     vector4f dv; dv.load_a(&amp;d[i]);
 
@@ -284,7 +284,7 @@ size_t vec_size = simd_traits&lt;<span class="predefined-type">float</span>&gt;:
 <span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &lt; n/vec_size; i += vec_size)
 {
     vec_type av; av.load_a(&amp;a[i]);
-    vec_type bv; bv.load_a(&amp;b[i));
+    vec_type bv; bv.load_a(&amp;b[i]);
     vec_type cv; cv.load_a(&amp;c[i]);
     vec_type dv; dv.load_a(&amp;d[i]);
 
@@ -493,7 +493,7 @@ size_t vec_size = simd_traits&lt;<span class="predefined-type">float</span>&gt;:
 <span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &lt; n/vec_size; i += vec_size)
 {
     vec_type av = load_a(&amp;a[i]);
-    vec_type bv = load_a(&amp;b[i));
+    vec_type bv = load_a(&amp;b[i]);
     vec_type cv = load_a(&amp;c[i]);
     vec_type dv = load_a(&amp;d[i]);
 
@@ -847,6 +847,8 @@ you need but this goes beyond the topic of this series of articles.</p>
         <a class="basic-alignment left" href="/blog/2014/10/13/writing-c-plus-plus-wrappers-for-simd-intrinsics-4/" title="Previous Post: Writing C++ wrappers for SIMD intrinsics (4)">&laquo; Writing C++ wrappers for SIMD intrinsics (4)</a>
       
       
+        <a class="basic-alignment right" href="/blog/2014/11/20/performance-considerations-aboud-simd-wrappers/" title="Next Post: Performance considerations aboud SIMD wrappers">Performance considerations aboud SIMD wrappers &raquo;</a>
+      
     </p>
   </footer>
 </article>
@@ -866,6 +868,10 @@ you need but this goes beyond the topic of this series of articles.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/11/20/performance-considerations-aboud-simd-wrappers/">Performance Considerations Aboud SIMD Wrappers</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/10/25/writing-c-plus-plus-wrappers-for-simd-intrinsics-5/">Writing C++ Wrappers for SIMD Intrinsics (5)</a>
       </li>
     
@@ -879,10 +885,6 @@ you need but this goes beyond the topic of this series of articles.</p>
     
       <li class="post">
         <a href="/blog/2014/10/10/writing-c-plus-plus-wrappers-for-simd-intrinsics-2/">Writing C++ Wrappers for SIMD Intrinsics (2)</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/10/09/writing-c-plus-plus-wrappers-for-simd-intrinsics-1/">Writing C++ Wrappers for SIMD Intrinsics (1)</a>
       </li>
     
   </ul>

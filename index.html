@@ -9,7 +9,9 @@
   <meta name="author" content="Johan Mabille">
 
   
-  <meta name="description" content="4. Making the code more generic In the previous section we saw how to plug the wrappers into existing code and ended up with the following loop: &hellip;">
+  <meta name="description" content="When I posted a link to this blog on reddit,
+I had comments from people who were skeptical of the SIMD Wrappers
+performances. They raised many &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -84,6 +86,56 @@
       
   <header>
     
+      <h1 class="entry-title"><a href="/blog/2014/11/20/performance-considerations-aboud-simd-wrappers/">Performance Considerations Aboud SIMD Wrappers</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-11-20T01:39:57+01:00" pubdate data-updated="true">Nov 20<span>th</span>, 2014</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>When I posted a link to this blog on <a href="http://www.reddit.com/r/cpp/comments/2laltn/ths_c_scientist_blog_is_born/">reddit</a>,
+I had comments from people who were skeptical of the <a href="http://jmabille.github.io/blog/2014/10/09/writing-c-plus-plus-wrappers-for-simd-intrinsics-1/">SIMD Wrappers</a>
+performances. They raised many possible performance hits in the implementation:</p>
+
+<ul>
+  <li>Arguments passed by const references instead of values, introducing a useless indirection and preventing the compiler from
+keeping the variable into registers</li>
+  <li>Indirection due to the wrapping of __mXXX types into objects</li>
+  <li>Operator overloads preventing the compiler from proper instructions reordering during optimization</li>
+</ul>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2014/11/20/performance-considerations-aboud-simd-wrappers/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
       <h1 class="entry-title"><a href="/blog/2014/10/25/writing-c-plus-plus-wrappers-for-simd-intrinsics-5/">Writing C++ Wrappers for SIMD Intrinsics (5)</a></h1>
     
     
@@ -137,7 +189,7 @@ std::vector&lt;<span class="predefined-type">float</span>&gt; a, b, c, d, e
 <span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &lt; n/<span class="integer">4</span>; i+=<span class="integer">4</span>)
 {
     vector4f av; av.load_a(&amp;a[i]);
-    vector4f bv; bv.load_a(&amp;b[i));
+    vector4f bv; bv.load_a(&amp;b[i]);
     vector4f cv; cv.load_a(&amp;c[i]);
     vector4f dv; dv.load_a(&amp;d[i]);
 
@@ -387,6 +439,10 @@ my works and ideas in case someone would face the same needs.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/11/20/performance-considerations-aboud-simd-wrappers/">Performance Considerations Aboud SIMD Wrappers</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/10/25/writing-c-plus-plus-wrappers-for-simd-intrinsics-5/">Writing C++ Wrappers for SIMD Intrinsics (5)</a>
       </li>
     
@@ -400,10 +456,6 @@ my works and ideas in case someone would face the same needs.</p>
     
       <li class="post">
         <a href="/blog/2014/10/10/writing-c-plus-plus-wrappers-for-simd-intrinsics-2/">Writing C++ Wrappers for SIMD Intrinsics (2)</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/10/09/writing-c-plus-plus-wrappers-for-simd-intrinsics-1/">Writing C++ Wrappers for SIMD Intrinsics (1)</a>
       </li>
     
   </ul>
