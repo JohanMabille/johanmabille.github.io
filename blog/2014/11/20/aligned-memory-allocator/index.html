@@ -1,0 +1,759 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Aligned Memory Allocator - The C++ scientist</title>
+  <meta name="author" content="Johan Mabille">
+
+  
+  <meta name="description" content="Introduction In a previous article about SIMD wrappers, I suggested to design a dedicated memory allocator to handle SIMD memory alignment &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://jmabille.github.io/blog/2014/11/20/aligned-memory-allocator">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="The C++ scientist" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-55863412-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">The C++ scientist</a></h1>
+  
+    <h2>Scientific computing, numerical methods and optimization in C++</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:jmabille.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Aligned Memory Allocator</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-11-20T08:59:40+01:00" pubdate data-updated="true">Nov 20<span>th</span>, 2014</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h2 id="introduction">Introduction</h2>
+
+<p>In a previous <a href="http://jmabille.github.io/blog/2014/10/13/writing-c-plus-plus-wrappers-for-simd-intrinsics-4/#simd_memory_allocator">article about SIMD wrappers</a>, I suggested to design a dedicated memory allocator to handle SIMD memory alignment constraints, but I didn’t give
+any details on how to do it. That’s the purpose of this article. The C++ standard describes a set of requirements our allocator must respect
+so it can work with standard containers. After a survey of these standard requirements, we’ll see how to implement an aligned memory allocator
+that meets them.</p>
+
+<!-- more -->
+
+<h2 id="the-c-standard-requirements">1. The C++ standard requirements</h2>
+
+<p>The standard requires the allocator to define the following type:</p>
+
+<ul>
+  <li><strong>value_type</strong>: the type of allocated elements, T</li>
+  <li><strong>pointer</strong> and <strong>const_pointer</strong>: pointer and constant pointer to T</li>
+  <li><strong>reference</strong> and <strong>constant_reference</strong>: reference and constant reference to T</li>
+  <li><strong>size_type</strong>: an unsigned integral type that can represent the size of the largest object in the allocation model</li>
+  <li><strong>difference_type</strong>: a signed integral type that can represent the difference between any two pointers in the allocation model</li>
+</ul>
+
+<p>The standard then requires a template class <strong>rebind</strong> member, which is a template typedef: Allocator&lt;T&gt;::rebind&lt;U&gt;::other is the same type as
+Allocator&lt;U&gt;. This member is used by container that allocates memory for internal structures that hold T elements instead of allocating memory
+for T elements. For instance, std::list&lt;T&gt; allocates memory for Node&lt;T&gt; instead of T, but you don’t want to use Allocator&lt;Node&lt;T&gt; &gt; as
+template parameter since this would expose implementation details in the interface. Thus you use Allocator&lt;T&gt; and the internal allocation
+is done with Allocator&lt;T&gt;::rebind&lt;U&gt;::other.allocate(n).</p>
+
+<p>Then we have to provide the <strong>address</strong> functions, which return the address of a given object. Two overloads are provided, one for references
+and one for constant references.</p>
+
+<p>The two following functions are the essential part of the allocator: <strong>allocate</strong> and <strong>deallocate</strong>, which allocates/deallocates memory for
+n objects of type T. These functions are low level memory management functions and are not responsible for constructing or destroying objects,
+this has to be done in specific functions: <strong>construct</strong> and <strong>destroy</strong>.</p>
+
+<p>The last specific function is <strong>max_size</strong>, a function that returns the maximum value that can be passed to allocate.</p>
+
+<p>Finally, the allocator must provide default and copy constructors, and equality check operators.</p>
+
+<h2 id="aligned-memory-allocator-interface">2. Aligned memory allocator interface</h2>
+
+<p>Since we must handle different memory alignment bound, our aligned memory allocator will take two template parameters: <strong>T</strong>, the type of allocated
+objects, and <strong>N</strong>, the aligment bound. Given the requirements of the previous section, the allocator interface looks like:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>aligned_allocator.hpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+<a href="#n14" name="n14">14</a>
+<a href="#n15" name="n15">15</a>
+<a href="#n16" name="n16">16</a>
+<a href="#n17" name="n17">17</a>
+<a href="#n18" name="n18">18</a>
+<a href="#n19" name="n19">19</a>
+<strong><a href="#n20" name="n20">20</a></strong>
+<a href="#n21" name="n21">21</a>
+<a href="#n22" name="n22">22</a>
+<a href="#n23" name="n23">23</a>
+<a href="#n24" name="n24">24</a>
+<a href="#n25" name="n25">25</a>
+<a href="#n26" name="n26">26</a>
+<a href="#n27" name="n27">27</a>
+<a href="#n28" name="n28">28</a>
+<a href="#n29" name="n29">29</a>
+<strong><a href="#n30" name="n30">30</a></strong>
+<a href="#n31" name="n31">31</a>
+<a href="#n32" name="n32">32</a>
+<a href="#n33" name="n33">33</a>
+<a href="#n34" name="n34">34</a>
+<a href="#n35" name="n35">35</a>
+<a href="#n36" name="n36">36</a>
+<a href="#n37" name="n37">37</a>
+<a href="#n38" name="n38">38</a>
+<a href="#n39" name="n39">39</a>
+<strong><a href="#n40" name="n40">40</a></strong>
+<a href="#n41" name="n41">41</a>
+<a href="#n42" name="n42">42</a>
+<a href="#n43" name="n43">43</a>
+</pre></td>
+  <td class="code"><pre>
+<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">T</span>, <span class="predefined-type">int</span> N&gt;
+    <span class="keyword">class</span> <span class="class">aligned_allocator</span>
+    {
+
+    <span class="directive">public</span>:
+
+        <span class="keyword">typedef</span> T value_type;
+        <span class="keyword">typedef</span> T&amp; reference;
+        <span class="keyword">typedef</span> <span class="directive">const</span> T&amp; const_reference;
+        <span class="keyword">typedef</span> T* pointer;
+        <span class="keyword">typedef</span> <span class="directive">const</span> T* const_pointer;
+        <span class="keyword">typedef</span> size_t size_type;
+        <span class="keyword">typedef</span> ptrdiff_t difference_type;
+
+        <span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">U</span>&gt;
+            <span class="keyword">struct</span> rebind
+            {
+                <span class="keyword">typedef</span> aligned_allocator&lt;U,N&gt; other;
+            };
+
+        <span class="directive">inline</span> aligned_allocator() <span class="keyword">throw</span>() {}
+        <span class="directive">inline</span> aligned_allocator(<span class="directive">const</span> aligned_allocator&amp;) <span class="keyword">throw</span>() {}
+
+        <span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">U</span>&gt;
+            <span class="directive">inline</span> aligned_allocator(<span class="directive">const</span> aligned_allocator&lt;U,N&gt;&amp;) <span class="keyword">throw</span>() {}
+
+        <span class="directive">inline</span> ~aligned_allocator() <span class="keyword">throw</span>() {}
+
+        <span class="directive">inline</span> pointer address(reference r) { <span class="keyword">return</span> &amp;r; }
+        <span class="directive">inline</span> const_pointer address(const_reference r) <span class="directive">const</span> { <span class="keyword">return</span> &amp;r; }
+
+        pointer allocate(size_type n, <span class="keyword">typename</span> std::allocator&lt;<span class="directive">void</span>&gt;::const_pointer hint = <span class="integer">0</span>);
+        <span class="directive">inline</span> <span class="directive">void</span> deallocate(pointer p, size_type);
+
+        <span class="directive">inline</span> <span class="directive">void</span> construct(pointer p, const_reference value) { <span class="keyword">new</span> (p) value_type(value); }
+        <span class="directive">inline</span> <span class="directive">void</span> destroy(pointer p) { p-&gt;~value_type(); }
+
+        <span class="directive">inline</span> size_type max_size() <span class="directive">const</span> <span class="keyword">throw</span>() { <span class="keyword">return</span> size_type(-<span class="integer">1</span>) / <span class="keyword">sizeof</span>(T); }
+
+        <span class="directive">inline</span> <span class="predefined-type">bool</span> <span class="directive">operator</span>==(<span class="directive">const</span> aligned_allocator&amp;) { <span class="keyword">return</span> <span class="predefined-constant">true</span>; }
+        <span class="directive">inline</span> <span class="predefined-type">bool</span> <span class="directive">operator</span>!=(<span class="directive">const</span> aligned_allocator&amp; rhs) { <span class="keyword">return</span> !<span class="directive">operator</span>==(rhs); }
+    };
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+<p>Nothing special to say here, the <strong>construct</strong> function calls the copy constructor of T through the placement new operator but does not allocate memory for
+the element, this is the responsibility of the <strong>allocate</strong> function. Same thing for the <strong>destroy</strong> function, it calls the destructor of T but it doesn’t deallocate memory, this has to be done after with a call to the <strong>deallocate</strong> function.</p>
+
+<h2 id="allocate-and-deallocate-implementation">3. Allocate and deallocate implementation</h2>
+
+<p>We can now focus on the <strong>allocate</strong> and <strong>deallocate</strong> implementation. Depending on our platform, aligned memory allocation function may be available:</p>
+
+<ul>
+  <li>On Windows 64 bits, FreeBSD (except on ARM and MIPS architectures), and Apple, the <strong>malloc</strong> function is already 16-bytes aligned</li>
+  <li>Systems implementing POSIX provide the <strong>posix_memalign</strong> function</li>
+  <li>SSE intrinsics provide the <strong>_mm_malloc</strong> function</li>
+  <li>Visual Studio provides the <strong>_aligned_malloc</strong> function</li>
+</ul>
+
+<p>Except for the 16-bytes aligned malloc, every function takes an alignment parameter that must be a power of 2, thus the <strong>N</strong> template parameter of our allocator should be a power of 2 so it can works with these aligned memory allocation functions. Note that many of these functions can be available on a same platform.</p>
+
+<p>Assume we can detect at compile time if such functions are available (we’ll come back on this later); we can provide a function that
+selects the aligned memory allocation to use if such a function is available, otherwise forwards to our own implementation:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>aligned_allocator.hpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+<a href="#n14" name="n14">14</a>
+<a href="#n15" name="n15">15</a>
+<a href="#n16" name="n16">16</a>
+<a href="#n17" name="n17">17</a>
+<a href="#n18" name="n18">18</a>
+<a href="#n19" name="n19">19</a>
+<strong><a href="#n20" name="n20">20</a></strong>
+<a href="#n21" name="n21">21</a>
+<a href="#n22" name="n22">22</a>
+<a href="#n23" name="n23">23</a>
+<a href="#n24" name="n24">24</a>
+<a href="#n25" name="n25">25</a>
+<a href="#n26" name="n26">26</a>
+<a href="#n27" name="n27">27</a>
+<a href="#n28" name="n28">28</a>
+<a href="#n29" name="n29">29</a>
+<strong><a href="#n30" name="n30">30</a></strong>
+<a href="#n31" name="n31">31</a>
+<a href="#n32" name="n32">32</a>
+<a href="#n33" name="n33">33</a>
+</pre></td>
+  <td class="code"><pre>
+<span class="keyword">namespace</span> detail
+{
+    <span class="directive">inline</span> <span class="directive">void</span>* _aligned_malloc(size_t size, size_t alignment)
+    {
+        <span class="directive">void</span>* res = <span class="integer">0</span>;
+        <span class="directive">void</span>* ptr = malloc(size+alignment);
+        <span class="keyword">if</span>(ptr != <span class="integer">0</span>)
+        {
+            res = <span class="keyword">reinterpret_cast</span>&lt;<span class="directive">void</span>*&gt;((<span class="keyword">reinterpret_cast</span>&lt;size_t&gt;(ptr) &amp; ~(size_t(alignment-<span class="integer">1</span>))) + alignment);
+            *(<span class="keyword">reinterpret_cast</span>&lt;<span class="directive">void</span>**&gt;(res) - <span class="integer">1</span>) = ptr;
+        }
+        <span class="keyword">return</span> res;
+    }
+}
+
+<span class="directive">inline</span> <span class="directive">void</span>* aligned_malloc(size_t size, size_t alignment)
+{
+    <span class="preprocessor">#if</span> MALLOC_ALREADY_ALIGNED
+        <span class="keyword">return</span> malloc(size);
+    <span class="preprocessor">#elif</span> HAS_MM_MALLOC
+        <span class="keyword">return</span> _mm_malloc(size,alignment);
+    <span class="preprocessor">#elif</span> HAS_POSIX_MEMALIGN
+        <span class="directive">void</span>* res;
+        <span class="directive">const</span> <span class="predefined-type">int</span> failed = posix_memalign(&amp;res,size,alignment);
+        <span class="keyword">if</span>(failed) res = <span class="integer">0</span>;
+        <span class="keyword">return</span> res;
+    <span class="preprocessor">#elif</span> (defined _MSC_VER)
+        <span class="keyword">return</span> _aligned_malloc(size, alignment);
+    <span class="preprocessor">#else</span>
+        <span class="keyword">return</span> detail::_aligned_malloc(size,alignment);
+    <span class="preprocessor">#endif</span>
+}
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+<p>The idea in the <strong>_aligned_malloc</strong> function is to search for the first aligned memory address (<em>res</em>) after the one returned by the classic malloc function (<em>ptr</em>), and to use it as return value. But since we must ensure <em>size</em> bytes are available after <em>res</em>, we must allocate more than <em>size</em> bytes; the minimum size to allocate to prevent buffer overflow is <em>size+alignment</em>. The we store the <em>ptr</em> value just before <em>res</em> so the <strong>_aligned_free</strong> function can easily retrieve and pass it to the classic free function:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>aligned_allocator.hpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+<a href="#n14" name="n14">14</a>
+<a href="#n15" name="n15">15</a>
+<a href="#n16" name="n16">16</a>
+<a href="#n17" name="n17">17</a>
+<a href="#n18" name="n18">18</a>
+<a href="#n19" name="n19">19</a>
+<strong><a href="#n20" name="n20">20</a></strong>
+<a href="#n21" name="n21">21</a>
+<a href="#n22" name="n22">22</a>
+<a href="#n23" name="n23">23</a>
+<a href="#n24" name="n24">24</a>
+</pre></td>
+  <td class="code"><pre>
+<span class="keyword">namespace</span> detail
+{
+    <span class="directive">inline</span> <span class="directive">void</span> _aligned_free(<span class="directive">void</span>* ptr)
+    {
+        <span class="keyword">if</span>(ptr != <span class="integer">0</span>)
+            free(*(<span class="keyword">reinterpret_cast</span>&lt;<span class="directive">void</span>**&gt;(ptr)-<span class="integer">1</span>));
+    }
+}
+
+<span class="directive">inline</span> <span class="directive">void</span> aligned_free(<span class="directive">void</span>* ptr)
+{
+    <span class="preprocessor">#if</span> MALLOC_ALREADY_ALIGNED
+        free(ptr);
+    <span class="preprocessor">#elif</span> HAS_MM_MALLOC
+        _mm_free(ptr);
+    <span class="preprocessor">#elif</span> HAS_POSIX_MEMALIGN
+        free(ptr);
+    <span class="preprocessor">#elif</span> defined(_MSC_VER)
+        _aligned_free(ptr);
+    <span class="preprocessor">#else</span>
+        detail::_aligned_free(ptr);
+    <span class="preprocessor">#endif</span>
+    }
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+<p>The <strong>aligned_free</strong> function is the symmetric of <strong>aligned_malloc</strong>: it selects the aligned memory function available or forwards to the <strong>_aligned_free</strong> function.</p>
+
+<p>We can now write the <strong>allocate</strong> and <strong>deallocate</strong> functions of the allocator:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>aligned_allocator.hpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+<a href="#n12" name="n12">12</a>
+<a href="#n13" name="n13">13</a>
+<a href="#n14" name="n14">14</a>
+<a href="#n15" name="n15">15</a>
+<a href="#n16" name="n16">16</a>
+<a href="#n17" name="n17">17</a>
+</pre></td>
+  <td class="code"><pre>
+<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">T</span>, <span class="predefined-type">int</span> N&gt;
+    <span class="keyword">typename</span> aligned_allocator&lt;T,N&gt;::pointer
+    aligned_allocator&lt;T,N&gt;::allocate(size_type n, <span class="keyword">typename</span> std::allocator&lt;<span class="directive">void</span>&gt;::const_pointer hint)
+    {
+        pointer res = <span class="keyword">reinterpret_cast</span>&lt;pointer&gt;(aligned_malloc(<span class="keyword">sizeof</span>(T)*n,N));
+        <span class="keyword">if</span>(res == <span class="integer">0</span>)
+            <span class="keyword">throw</span> std::bad_alloc();
+        <span class="keyword">return</span> res;
+    }
+
+<span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="class">T</span>, <span class="predefined-type">int</span> N&gt;
+    <span class="keyword">typename</span> aligned_allocator&lt;T,N&gt;::pointer
+    aligned_allocator&lt;T,N&gt;::deallocate(pointer p, size_type)
+    {
+    aligned_free(p);
+    }
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+<p>Here we see the advantage to have encapsulated aligned memory allocation selection in a dedicated function: the allocate function of the allocator simply forwards to this dedicated function and then handles possible bad allocation. The result is a code simple and easy to read. Another advantage is you can
+use <strong>aligned_malloc</strong> and <strong>aligned_free</strong> functions outside the <strong>aligned_allocator</strong> class if you need.</p>
+
+<p>Note: the call to malloc after the MALLOC_ALREADY_ALIGNED preprocessor token should be available for 16-bytes aligned memory allocator only (the same applies to the call to free). Thus we should provide two versions of <strong>aligned_malloc</strong> and <strong>aligned_free</strong> and a specialization of the allocator ofr
+<strong>N = 16</strong>.</p>
+
+<h2 id="detecting-available-aligned-memory-allocation">4. Detecting available aligned memory allocation</h2>
+
+<p>Now that we have implemented the allocation and deallocation methods, we can come back to the preprocessor tokens. Defining these tokens is not simple because you have to refer to the documentation of a lot of various systems and architectures. Thus there’s a chance that we may not be comprehensive, but at least we can cover the most common platforms.</p>
+
+<p>Let’s start with the GNU world; according to this <a href="http://www.gnu.org/s/libc/manual/html_node/Aligned-Memory-Blocks.html">documentation</a>, “The address of a block returned by malloc or realloc in GNU systems is always a multiple of eight (or sixteen on 64-bit systems)”. According to this <a href="http://gcc.fyxm.net/summit/2003/Porting%20to%2064%20bit.pdf">one</a>, page 114, “[The] LP64 model […] is used by all 64-bit UNIX ports”, therefore we should use this predefined macro instead of __x86_64__ (this last one won’t work on PowerPC or SPARC). Thus we can define the following macro:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>aligned_allocator.hpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+</pre></td>
+  <td class="code"><pre>
+<span class="preprocessor">#if</span> defined(__GLIBC__) &amp;&amp; ((__GLIBC__&gt;=<span class="integer">2</span> &amp;&amp; __GLIBC_MINOR__ &gt;= <span class="integer">8</span>) || __GLIBC__&gt;<span class="integer">2</span>) \
+ &amp;&amp; defined(__LP64__)
+  <span class="preprocessor">#define</span> GLIBC_MALLOC_ALREADY_ALIGNED <span class="integer">1</span>
+<span class="preprocessor">#else</span>
+  <span class="preprocessor">#define</span> GLIBC_MALLOC_ALREADY_ALIGNED <span class="integer">0</span>
+<span class="preprocessor">#endif</span>
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+<p>FreeBSD has 16-byte aligned malloc, except on ARM and MIPS architectures (see this <a href="ttp://svn.freebsd.org/viewvc/base/stable/7/lib/libc/stdlib/malloc.c?view=markup">documentation</a>):</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>aligned_allocator.hpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+</pre></td>
+  <td class="code"><pre>
+<span class="preprocessor">#if</span> defined(__FreeBSD__) &amp;&amp; !defined(__arm__) &amp;&amp; !defined(__mips__)
+  <span class="preprocessor">#define</span> FREEBSD_MALLOC_ALREADY_ALIGNED <span class="integer">1</span>
+<span class="preprocessor">#else</span>
+  <span class="preprocessor">#define</span> FREEBSD_MALLOC_ALREADY_ALIGNED <span class="integer">0</span>
+<span class="preprocessor">#endif</span>
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+<p>On windows 64 bits and Apple OS, the malloc function is also already aligned, thus we can define the <strong>MALLOC_ALREADY_ALIGNED</strong> macro, based on these information and the macros previously defined:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>aligned_allocator.hpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+</pre></td>
+  <td class="code"><pre>
+<span class="preprocessor">#if</span> (defined(__APPLE__) \
+ || defined(_WIN64) \
+ || GLIBC_MALLOC_ALREADY_ALIGNED \
+ || FREEBSD_MALLOC_ALREADY_ALIGNED)
+  <span class="preprocessor">#define</span> MALLOC_ALREADY_ALIGNED <span class="integer">1</span>
+<span class="preprocessor">#else</span>
+  <span class="preprocessor">#define</span> MALLOC_ALREADY_ALIGNED <span class="integer">0</span>
+<span class="preprocessor">#endif</span>
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+<p>To handle systems implementing POSIX:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>aligned_allocator.hpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+</pre></td>
+  <td class="code"><pre>
+<span class="preprocessor">#if</span> ((defined __QNXNTO__) || (defined _GNU_SOURCE) || ((defined _XOPEN_SOURCE) &amp;&amp; (_XOPEN_SOURCE &gt;= <span class="integer">600</span>))) \
+ &amp;&amp; (defined _POSIX_ADVISORY_INFO) &amp;&amp; (_POSIX_ADVISORY_INFO &gt; <span class="integer">0</span>)
+  <span class="preprocessor">#define</span> HAS_POSIX_MEMALIGN <span class="integer">1</span>
+<span class="preprocessor">#else</span>
+  <span class="preprocessor">#define</span> HAS_POSIX_MEMALIGN <span class="integer">0</span>
+<span class="preprocessor">#endif</span>
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+<p>The last macro to define is <strong>HAS_MM_MALLOC</strong>; the _mm_malloc function is provided with SSE intrinsics, thus we can rely on the macros defined in this <a href="http://jmabille.github.io/blog/2014/10/25/writing-c-plus-plus-wrappers-for-simd-intrinsics-5#detecting_instr_set">article</a>:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>aligned_allocator.hpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+</pre></td>
+  <td class="code"><pre>
+<span class="preprocessor">#if</span> SSE_INSTR_SET &gt; <span class="integer">0</span>
+    <span class="preprocessor">#define</span> HAS_MM_MALLOC <span class="integer">1</span>
+<span class="preprocessor">#else</span>
+    <span class="preprocessor">#define</span> HAS_MM_MALLOC <span class="integer">0</span>
+<span class="preprocessor">#endif</span>
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+<p>That’s it, some architectures may be missing but it shouldn’t be too complicated to handle them with appropriate documentation.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>The aligned memory allocator designed in this article meets the standard requirements and can therefore be used with any container of the STL. If you work with intrinsics wrappers and std::vector, this allocator will allow you to load the data from memory with the <a href="http://jmabille.github.io/blog/2014/10/25/writing-c-plus-plus-wrappers-for-simd-intrinsics-5#simd_load">load_a</a> method, faster than <a href="http://jmabille.github.io/blog/2014/10/25/writing-c-plus-plus-wrappers-for-simd-intrinsics-5#simd_load">load_u</a> (the same applies for storing data to memory):</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>sample.cpp </span></figcaption>
+ <table class="CodeRay"><tr>
+  <td class="line-numbers"><pre><a href="#n1" name="n1">1</a>
+<a href="#n2" name="n2">2</a>
+<a href="#n3" name="n3">3</a>
+<a href="#n4" name="n4">4</a>
+<a href="#n5" name="n5">5</a>
+<a href="#n6" name="n6">6</a>
+<a href="#n7" name="n7">7</a>
+<a href="#n8" name="n8">8</a>
+<a href="#n9" name="n9">9</a>
+<strong><a href="#n10" name="n10">10</a></strong>
+<a href="#n11" name="n11">11</a>
+</pre></td>
+  <td class="code"><pre>
+<span class="keyword">typedef</span> std::vector&lt;<span class="predefined-type">double</span>,aligned_allocator&lt;<span class="predefined-type">double</span>,<span class="integer">16</span>&gt; &gt; vector_type;
+vector_type v1,v2,v3;
+<span class="comment">// code filling v1 and v2</span>
+<span class="keyword">for</span>(size_t i = <span class="integer">0</span>; i &lt; v1.size(); i += simd_traits&lt;<span class="predefined-type">double</span>&gt;::size)
+{
+    vector2d v1d = load_a(&amp;v1[i]);
+    vector2d v2d = load_a(&amp;v2[i]);
+    vector2d v3d = v1d + v2d;
+    store_a(&amp;v3[i],v3d);
+}
+</pre></td>
+</tr></table>
+ </figure></notextile></div>
+
+<p>But as we’ll see in a next article, std::vector may not be the more appropriate container for fast computation programs.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Johan Mabille</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-11-20T08:59:40+01:00" pubdate data-updated="true">Nov 20<span>th</span>, 2014</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/memory/'>Memory</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2014/11/20/performance-considerations-about-simd-wrappers/" title="Previous Post: Performance considerations about SIMD wrappers">&laquo; Performance considerations about SIMD wrappers</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2014/11/20/aligned-memory-allocator/">Aligned Memory Allocator</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/11/20/performance-considerations-about-simd-wrappers/">Performance Considerations About SIMD Wrappers</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/10/25/writing-c-plus-plus-wrappers-for-simd-intrinsics-5/">Writing C++ Wrappers for SIMD Intrinsics (5)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/10/13/writing-c-plus-plus-wrappers-for-simd-intrinsics-4/">Writing C++ Wrappers for SIMD Intrinsics (4)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/10/10/writing-c-plus-plus-wrappers-for-simd-intrinsics-3/">Writing C++ Wrappers for SIMD Intrinsics (3)</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/jmabille">@jmabille</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'jmabille',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2014 - Johan Mabille -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'thecplusplusscientist';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://jmabille.github.io/blog/2014/11/20/aligned-memory-allocator/';
+        var disqus_url = 'http://jmabille.github.io/blog/2014/11/20/aligned-memory-allocator/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

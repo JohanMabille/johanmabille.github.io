@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Vectorization | The C++ scientist]]></title>
   <link href="http://jmabille.github.io/blog/categories/vectorization/atom.xml" rel="self"/>
   <link href="http://jmabille.github.io/"/>
-  <updated>2014-11-20T19:30:15+01:00</updated>
+  <updated>2014-12-06T00:48:58+01:00</updated>
   <id>http://jmabille.github.io/</id>
   <author>
     <name><![CDATA[Johan Mabille]]></name>
@@ -1163,7 +1163,7 @@ vec_type va = simd_functions_invoker&amp;lt;<span class="predefined-type">float<
 </tr></table>
  </figure></notextile></div></float></p>
 
-<p>That’s too much verbose. Let’s add facade functions that deduce template parameters for us:</p>
+<p><a name="simd_load"></a>That’s too much verbose. Let’s add façade functions that deduce template parameters for us:</p>
 
 <p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>simd.hpp </span></figcaption>
  <table class="CodeRay"><tr>
@@ -1292,7 +1292,7 @@ easy to read and to maintain.</p>
 
 <h3 id="detecting-the-supported-instruction-set">4.3 Detecting the supported instruction set</h3>
 
-<p>Until now, we’ve assumed we were able to detect at compile time the available instruction set. Let’s see now how
+<p><a name="detecting_instr_set"></a>Until now, we’ve assumed we were able to detect at compile time the available instruction set. Let’s see now how
 to do that. Compilers often provide preprocessor tokens depending on the available instruction set, but these tokens
 may vary from one compiler to another, so we have to standardize that. On most 64-bit compilers, the tokens look
 like <strong>__SSE__</strong> or <strong>__SSE3__</strong>, on 32-bit systems, Microsoft compiler sets the preprocessor token

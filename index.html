@@ -9,9 +9,7 @@
   <meta name="author" content="Johan Mabille">
 
   
-  <meta name="description" content="When I posted a link to this blog on reddit,
-I had comments from people who were skeptical of the SIMD Wrappers
-performances. They raised many &hellip;">
+  <meta name="description" content="Introduction In a previous article about SIMD wrappers, I suggested to design a dedicated memory allocator to handle SIMD memory alignment &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -80,6 +78,52 @@ performances. They raised many &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/11/20/aligned-memory-allocator/">Aligned Memory Allocator</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-11-20T08:59:40+01:00" pubdate data-updated="true">Nov 20<span>th</span>, 2014</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2 id="introduction">Introduction</h2>
+
+<p>In a previous <a href="http://jmabille.github.io/blog/2014/10/13/writing-c-plus-plus-wrappers-for-simd-intrinsics-4/#simd_memory_allocator">article about SIMD wrappers</a>, I suggested to design a dedicated memory allocator to handle SIMD memory alignment constraints, but I didn’t give
+any details on how to do it. That’s the purpose of this article. The C++ standard describes a set of requirements our allocator must respect
+so it can work with standard containers. After a survey of these standard requirements, we’ll see how to implement an aligned memory allocator
+that meets them.</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/2014/11/20/aligned-memory-allocator/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
   
   
     <article>
@@ -439,6 +483,10 @@ my works and ideas in case someone would face the same needs.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2014/11/20/aligned-memory-allocator/">Aligned Memory Allocator</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/11/20/performance-considerations-about-simd-wrappers/">Performance Considerations About SIMD Wrappers</a>
       </li>
     
@@ -452,10 +500,6 @@ my works and ideas in case someone would face the same needs.</p>
     
       <li class="post">
         <a href="/blog/2014/10/10/writing-c-plus-plus-wrappers-for-simd-intrinsics-3/">Writing C++ Wrappers for SIMD Intrinsics (3)</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/10/10/writing-c-plus-plus-wrappers-for-simd-intrinsics-2/">Writing C++ Wrappers for SIMD Intrinsics (2)</a>
       </li>
     
   </ul>
