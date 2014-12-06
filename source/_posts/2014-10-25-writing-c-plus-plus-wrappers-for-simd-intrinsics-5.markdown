@@ -3,7 +3,7 @@ layout: post
 title: "Writing C++ Wrappers for SIMD Intrinsics (5)"
 date: 2014-10-25 11:28:18 +0200
 comments: true
-categories: [SIMD,Vectorization,CodeProject]
+categories: [SIMD,Vectorization]
 ---
 
 ## 4. Making the code more generic
@@ -171,7 +171,7 @@ typedef simd_traits<float>::simd_type vec_type;
 vec_type va = simd_functions_invoker<float,vec_type>::load_a(a);
 {% endcoderay %}
 
-That's too much verbose. Let's add facade functions that deduce template parameters for us:
+<a name="simd_load"></a>That's too much verbose. Let's add façade functions that deduce template parameters for us:
 
 {% coderay lang:cpp simd.hpp %}
 template <class T> inline typename simd_traits<T>::type
@@ -242,7 +242,7 @@ easy to read and to maintain.
 
 ### 4.3 Detecting the supported instruction set
 
-Until now, we've assumed we were able to detect at compile time the available instruction set. Let's see now how
+<a name="detecting_instr_set"></a>Until now, we've assumed we were able to detect at compile time the available instruction set. Let's see now how
 to do that. Compilers often provide preprocessor tokens depending on the available instruction set, but these tokens
 may vary from one compiler to another, so we have to standardize that. On most 64-bit compilers, the tokens look
 like **\_\_SSE\_\_** or **\_\_SSE3\_\_**, on 32-bit systems, Microsoft compiler sets the preprocessor token

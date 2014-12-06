@@ -3,7 +3,7 @@ layout: post
 title: "Writing C++ wrappers for SIMD intrinsics (1)"
 date: 2014-10-09 09:10:38 +0200
 comments: true
-categories: [SIMD,vectorization,CodeProject]
+categories: [SIMD,vectorization]
 ---
 
 ## <a name="introduction"></a>Introduction
