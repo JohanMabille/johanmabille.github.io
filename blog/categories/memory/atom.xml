@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Memory | The C++ scientist]]></title>
   <link href="http://jmabille.github.io/blog/categories/memory/atom.xml" rel="self"/>
   <link href="http://jmabille.github.io/"/>
-  <updated>2014-12-06T01:01:44+01:00</updated>
+  <updated>2014-12-06T01:06:05+01:00</updated>
   <id>http://jmabille.github.io/</id>
   <author>
     <name><![CDATA[Johan Mabille]]></name>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Aligned Memory Allocator]]></title>
-    <link href="http://jmabille.github.io/blog/2014/11/20/aligned-memory-allocator/"/>
-    <updated>2014-11-20T08:59:40+01:00</updated>
-    <id>http://jmabille.github.io/blog/2014/11/20/aligned-memory-allocator</id>
+    <link href="http://jmabille.github.io/blog/2014/12/06/aligned-memory-allocator/"/>
+    <updated>2014-12-06T08:59:40+01:00</updated>
+    <id>http://jmabille.github.io/blog/2014/12/06/aligned-memory-allocator</id>
     <content type="html"><![CDATA[<h2 id="introduction">Introduction</h2>
 
 <p>In a previous <a href="http://jmabille.github.io/blog/2014/10/13/writing-c-plus-plus-wrappers-for-simd-intrinsics-4/#simd_memory_allocator">article about SIMD wrappers</a>, I suggested to design a dedicated memory allocator to handle SIMD memory alignment constraints, but I didn’t give
