@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Aligned memory allocator"
-date: 2014-11-20 08:59:40 +0100
+date: 2014-12-06 08:59:40 +0100
 comments: true
 categories: [Memory]
 published: true
