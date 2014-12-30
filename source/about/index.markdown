@@ -5,5 +5,4 @@ sharing: true
 footer: true
 ---
 
-I'm a computer engineer with about 10 years experience, passionate about C++, algorithm,
-software architecture and performance challenge.
+I am a computer scientist with about 10 years of experience, with extensive knowledge of C++ and high performance scientific computing.
