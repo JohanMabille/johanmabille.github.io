@@ -8,11 +8,11 @@ categories: [SIMD,Vectorization]
 
 ## <a name="section_1"></a>1. SSE/AVX intrinsics
 
-Before we start to write any code, we need to take a look at the instrinsics the compiler provides, and how things are
-organized. For the rest of this article and the following ones, I assume we use an Intel processor, recent enough to
-provide SSE 4 and AVX; the compiler can be gcc or MSVC, the instrinsics they provide are almost the same.
+Before we start to write any code, we need to take a look at the instrinsics provided with the compiler. Henceforth, I
+assume we use an Intel processor, recent enough to provide SSE 4 and AVX instruction sets; the compiler can be gcc or
+MSVC, the instrinsics they provide are almost the same.
 
-If you already know about SSE / AVX intrinsics you can skip this section.
+If you already know about SSE / AVX intrinsics you may skip this section.
 <!-- more -->
 
 ### 1.1 Registers
@@ -28,8 +28,8 @@ AVX512 will increase the width of the SIMD registers from 256 to 512 bits.
 
 ### 1.2 Files to include
 
-The intrinsic functions are splitted among different files, depending on the version of the SIMD instruction set they
-belong to :
+Intrinsic functions are made available in different header files, based on the version of the SIMD instruction set they
+belong to:
 
 * \<xmmintrin.h\> : SSE, operations on 4 single precision floating point numbers (float).
 * \<emmintrin.h\> : SSE 2, operations on integers and on 2 double precision floating point numbers (double).
@@ -40,12 +40,12 @@ belong to :
 * \<immintrin.h\> : AVX, operations on integers, 8 float or 4 double.
 
 Each of these files includes the previous one, so you only have to include the one matching the highest version of the SIMD
-instruction set available in your processor. Later we'll see how to detect at compile time which version on SIMD instruction
+instruction set available in your processor. Later we will see how to detect at compile time which version on SIMD instruction
 set is available and thus which file to include. For now, just assume we're able to include the right file each time we need it.
 
 ### 1.3 Naming rules
 
-Now if you take a look at these files, you'll notice provided data and functions follow some naming rules :
+Now if you take a look at these files, you will notice provided data and functions follow some naming rules :
 
 * data vectors are named **\_\_mXXX(T)**, where :
 	* XXX is the number of bits of the vector (128 for SSE, 256 for AVX)
@@ -73,7 +73,7 @@ Intrinsics encompass a wide set of features; we can distinguish the following ca
 * Memory move : _mm_load_xx, _mm_store_xx, ...
 * Setting : _mm_set_xx, _mm_setzero_xx, ...
 
-Some intrinsics won't be wrapped, and some of them will bu used only to build higher level functions in the wrappers.
+I will not provide wrappers for all intrinsics,  and some of them will be used only to build higher level functions in the wrappers.
 
 ### 1.5 Sample code
 
@@ -92,7 +92,7 @@ for(size_t i = 0; i < e.size(); i += 4)
 {% endcoderay %}
 
 Quite hard to read, right ? And this is just for two multiplications and one addition; imagine using intrinsics in a huge amount of code,
-and you'll get code really hard to understand and to maintain. What we need is a way to use \_\_m128 with traditional arithmetic
+and you will get code really hard to understand and to maintain. What we need is a way to use \_\_m128 with traditional arithmetic
 operators, as we do with float :
 
 {% coderay wrapped_sample.cpp %}

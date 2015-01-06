@@ -30,7 +30,7 @@ SIMD uses a single instruction to achieve the same result. Thus SIMD operations 
 scalar operations.
 
 SIMD instructions were first used in the early 1970s, but only became available in consumer-grade chips in the
-90s to allow real-time video processing and advance computer graphics for video games. Each processor manufacturer
+90s to allow real-time video processing and advanced computer graphics for video games. Each processor manufacturer
 has implemented its own SIMD instruction set:
 
 + MMX / SSE / AVX (Intel processors)
@@ -59,12 +59,12 @@ an existing library wrapping these intrinsics. Well, it depends on your needs.
 instruction set (different versions of SSE and AVX), but he doesn't make heavy use of metaprogramming in his
 implementation. Hence adding a new wrapper (for a new instruction set, a new version of an existing one or even for
 your own numerical types)  requires to type a lot of code that could otherwise have been factorized. Moreover, some essential
-tools are missing, such as an aligned memory allocator (we'll see why you need such a tool later). However his library is
+tools are missing, such as an aligned memory allocator (we will see why you need such a tool later). However his library is
 a good point to start.
 
 Another library you might want to consider is the [Numerical Template Toolbox](https://github.com/MetaScale/nt2).
 Although it has a very comprehensive set of mathematical functions, its major drawback is that it really slows the
-compilation. More over its development and documentation aren't finished yet, and it might be difficult to extend it.
+compilation. Moreover its development and documentation aren't finished yet, and it might be difficult to extend it.
 
 And last but not least, writing your own wrapper will make you confront issues specific to SIMD instructions
 and make you understand how it works; thus you will be able to use SIMD intrinsics in a really efficient way, regardless
