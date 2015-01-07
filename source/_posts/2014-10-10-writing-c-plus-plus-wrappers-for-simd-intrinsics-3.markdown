@@ -8,11 +8,11 @@ categories: [SIMD,Vectorization]
 
 ## <a name="section_2"></a>2. First version of wrappers
 
-Now that we know a little more about SSE and AVX, let's start writing code; the wrappers will have
-a data vector member and provide arithmetic, comparison and logical operators overloads. Through this
-section, I will mainly focus on vector4f, the wrapper around \_\_m128, but translating the code for
-other data vectors should not be difficult thanks to the previous section. Since the wrappers will be
-used as numerical types, they must have value semantics, that is they must define copy constructor,
+Now that we know a little more about SSE and AVX, let's write some  code; the wrappers will have
+a data vector member and provide arithmetic, comparison and logical operators overloads. Throughout
+this section, I will mainly focus on vector4f, the wrapper around \_\_m128, but translating the code
+for other data vectors should not be difficult thanks to the previous section. Since the wrappers will
+be used as numerical types, they must have value semantics, that is they must define copy constructor,
 assignment operator and non-virtual destructor.
 
 <!-- more -->
@@ -20,7 +20,7 @@ assignment operator and non-virtual destructor.
 
 ### 2.1 Initialization and assignment
 
-SSE and AVX data vectors can be initialized from different inputs : a single value for all elements,
+SSE and AVX data vectors can be initialized from different inputs: a single value for all elements,
 a value per element, or another data vector.
 
 {% coderay lang:cpp simd_sse.hpp %}
@@ -57,7 +57,7 @@ private:
 ### 2.2 Implicit conversion
 
 The operators overloads have to access the m_value member of the wrapper so they can pass it as an argument to the intrinsic
-functions :
+functions:
 
 {% coderay lang:cpp overload sample%}
 vector4f operator+(const vector4f& lhs, const vector4f& rhs)
@@ -67,12 +67,12 @@ vector4f operator+(const vector4f& lhs, const vector4f& rhs)
 {% endcoderay %}
 
 We could declare the operator overloads as friend functions of the wrapper class, or provide a get method returning the internal
-m_value. Both of these solutions work, but aren't elegant : the first requires a huge amount of friend declarations, the second
+m_value. Both of these solutions work, but aren't elegant: the first requires a huge amount of friend declarations, the second
 produces heavy code unpleasant to read.
 
-A more elegant solution is to provide a conversion operator from vector4f to __m128 ; since vector4f can be implicitly converted
+A more elegant solution is to provide a conversion operator from vector4f to __m128; since vector4f can be implicitly converted
 from __m128, we can now use vector4f or __m128 indifferently. Moreover we can save the vector4f copy constructor and assignment
-operator :
+operator:
 
 {% coderay lang:cpp simd_sse.hpp %}
 class vector4f
@@ -92,7 +92,7 @@ public:
 
 	inline operator __m128() const { return m_value; }
 
-	// vector4f(const vector4f&) and operator=(const vector4f&) are not required anymore :
+	// vector4f(const vector4f&) and operator=(const vector4f&) are not required anymore:
 	// the conversion operator will be called before calling vector4f(const __m128&)
 	// or operator=(const __m128&)
 
@@ -109,7 +109,7 @@ Next step is to write the arithmetic operators overloads. The classic way to do 
 computed assignment operators and to use them in operators overloads, so they don't have to access
 private members of vector4f; but since vector4f can be implicitly converted to \_\_m128, we can
 do the opposite and avoid using a temporary (this won't have any impact on performance since
-the compiler can optimize it, but produces shorter and more pleasant code to read) :
+the compiler can optimize it, but produces shorter and more pleasant code to read):
 
 {% coderay lang:cpp simd_sse.hpp %}
 class vector4f
@@ -133,7 +133,7 @@ inline vector4f operator+(const vector4f& lhs, const vector4f& rhs)
 
 ### 2.4 The need for a base class
 
-We could go ahead and write the remaining arithmetic operators overloads, just as we did before :
+We could go ahead and write the remaining arithmetic operators overloads, just as we did before:
 {% coderay lang:cpp simd_sse.hpp %}
 vector4f operator+(const vector4f&, const vector4f&);
 // Adds the same float value to each data vector member
@@ -153,10 +153,10 @@ vector4f operator++(int);
 {% endcoderay %}
 
 But wait! Whenever you add a new wrapper, you'll have to write these operators overloads again. Besides
-the fact you'll type a lot of boilerplate code, computed assignment operators will be the same as those
-of vector4f (that is, invoke the corresponding operator overload and return the object), and even some
-operators overloads will have the same code as the one of vector4f operators. Code duplication is never
-good, and we should look for ways to avoid it.
+the fact that you will need to type a lot of boilerplate code, computed assignment operators will be the
+same as those of vector4f (that is, invoke the corresponding operator overload and return the object),
+and even some operators overloads will have the same code as the one of vector4f operators. Code duplication
+is never good, and we should look for ways to avoid it.
 
 If we had encountered this problem for classes with entity semantics, we would have captured the common code
 into a base class, and delegate the specific behavior to virtual methods, a typical use of classical dynamic
@@ -167,8 +167,8 @@ don't know about this pattern, the most important thing to know is CRTP allows y
 classes from the base class just as you would do through virtual methods, except the target methods are resolved
 at compile time.
 
-Let's call our base class simd_vector, it will be used as base class for every wrapper ; here is what it should
-look like :
+Let's call our base class simd_vector, it will be used as base class for every wrapper; here is what it should
+look like:
 
 {% coderay lang:cpp simd_base.hpp%}
 template <class X>
@@ -248,7 +248,7 @@ template <class X>
 {% endcoderay %}
 
 Now, all vector4f needs to do is to inherit from simd_vector and implement the traditional operator+, and
-it will get operator+= and the operator+ overloads for free (and the same for other arithmetic operators) :
+it will get operator+= and the operator+ overloads for free (and the same for other arithmetic operators):
 
 {% coderay lang:cpp simd_sse.hpp %}
 class vector4f : public simd_vector<vector4f>
@@ -276,7 +276,7 @@ private:
 };
 
 // Based on this operator implementation, simd_vector<vector4f> will generate
-// the following methods and overloads :
+// the following methods and overloads:
 // vector4f& operator+=(const vector4f&)
 // vector4f operator++(int)
 // vector4f& operator++()
@@ -306,15 +306,15 @@ inline vector4f operator/(const vetcor4f& lhs, const vector4f& rhs)
 Looks good, doesn't it ? Every time we want to implement a new wrapper, we only have to code 4 operators and
 make our class inherit from simd_vector, and all overloads will be generated for free!
 
-Just one remark before we continue with comparison operators ; if you have noticed, the base class simd_vector
+Just one remark before we continue with comparison operators; if you have noticed, the base class simd_vector
 defines a type named value_type, depending on the nature of the inheriting class (float for vector4f, double
 for vector2d, ...). However, this type is not defined by the inheriting class, but by a traits class instead.
-This is a CRTP constraint : you can access the inheriting class as long the compiler doesn't instantiate the
-code; if you call a method defined in the inheriting class, the compiler will assume it exists until it has to
-instantiate the code. But type resolution is different and you have to define it out of the inheriting class.
-This is one reason for the existence of the simd_vector_traits class. Other reasons will be discussed in a later
-section. Note the class containing the type definition doesn't have to be fully defined at this point : a simple
-forward declaration is sufficient.
+This is a constraint of the CRTP pattern: you can access the inheriting class as long the compiler doesn't
+instantiate the code; if you call a method defined in the inheriting class, the compiler will assume it exists
+until it has to instantiate the code. But type resolution is different and you have to define it out of the
+inheriting class. This is one reason for the existence of the simd_vector_traits class. Other reasons will be
+discussed in a later section. Note the class containing the type definition doesn't have to be fully defined
+at this point: a simple forward declaration is sufficient.
 
 **EDIT 20/11/2014:** it seems the CRTP layer introduces a slight overhead (at least with GCC), see this
 [article](http://jmabille.github.io/blog/2014/11/20/performance-considerations-about-simd-wrappers/) for more
@@ -326,10 +326,10 @@ Since ordinary comparison operators return boolean value, we need to implement S
 number of boolean elements of the wrappers will be directly related to the number of floating values wrapped
 by our arithmetic wrappers.
 
-In order not to duplicate code, we'll use the same architecture as for arithmetic wrappers : a CRTP with
+In order not to duplicate code, we'll use the same architecture as for arithmetic wrappers: a CRTP with
 base class for common code, and inheriting classes for specific implementation. Here is the implementation
 of the simd_vector_bool class, the base used to generate bitwise assignment operators and logical operators
-overloads in inheriting classes :
+overloads in inheriting classes:
 
 {% coderay lang:cpp simd_base.hpp %}
 template <class X>
@@ -395,7 +395,7 @@ template <class X>
 	}
 {% endcoderay%}
 
-The inheriting class vector4fb only has to provide bitwise operators and equality/inequality operators :
+The inheriting class vector4fb only has to provide bitwise operators and equality/inequality operators:
 
 {% coderay lang:cpp simd_sse.hpp%}
 class vector4fb : public simd_vector_bool<vector4fb>
@@ -453,10 +453,10 @@ inline vector4fb operator!=(const vector4f& lhs, const vector4fb& rhs)
 }
 {% endcoderay %}
 
-Now we have wrappers for boolean, we can add the comparison operators to the vector4f class; again,
+Now that we have wrappers for boolean, we can add the comparison operators to the vector4f class; again,
 to avoid code duplication, some operators will be implemented in the base class and will be based on
 specific operators implemented in the inheriting class. Let's start with the vector4f comparison
-operators :
+operators:
 
 {% coderay lang:cpp simd_sse.hpp %}
 // Definition of vector4f and arithmetic overloads
@@ -487,7 +487,7 @@ type. If these operators were implemented for vector4f, we would have return vec
 they are implemented for the base class, they need to return the boolean wrapper related to the
 arithmetic wrapper, i.e the inheriting class. What we need here is to provide a mapping between
 arithmetic wrapper type and boolean wrapper type somewhere. Remember the simd_vector_traits structure
-we declared to define our value_type ? It would be the perfect place for defining that mapping :
+we declared to define our value_type ? It would be the perfect place for defining that mapping:
 
 {% coderay lang:cpp simd_sse.hpp%}
 // simd_vector_traits<vector4f> must be defined before vector4f so simd_vector can compile
@@ -507,11 +507,11 @@ class vector4f
 	// ...
 {% endcoderay %}
 
-A last remark before we add the last comparison operators : since the template simd_vector_traits
+A last remark before we add the last comparison operators: since the template simd_vector_traits
 will never be defined but full specialized instead, there is no risk we forget to define it when
 we add a new wrapper, we'll have a compilation error.
 
-Finally, we can add the missing operators for the base class :
+Finally, we can add the missing operators for the base class:
 
 {% coderay lang:cpp simd_base.hpp %}
 // Declaration of simd_vector and operators
