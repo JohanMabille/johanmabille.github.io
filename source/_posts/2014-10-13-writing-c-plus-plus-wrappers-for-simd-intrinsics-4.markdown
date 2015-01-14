@@ -75,7 +75,7 @@ for(size_t i = n/4; i < n; ++i)
 }
 {% endcoderay %}
 
-The first problem is we need a way to store a vector4f into 4 floats; as said in the previous paragraph, we
+The first problem is that we need a way to store a vector4f into 4 floats; as said in the previous paragraph, we
 can add to our wrappers a method that returns a scalar within the vector4f and invoke it that way:
 
 {%coderay sample.cpp %}
@@ -85,7 +85,7 @@ e[i+2] = ev[2];
 e[i+3] = ev[3];
 {% endcoderay %}
 
-The second problem is this code is not generic; if you migrate from SSE to AVX, you'll have to update the
+The second problem is that this code is not generic; if you migrate from SSE to AVX, you'll have to update the
 initialization of your wrapper so it takes 8 floats; the same for storing your vector4f in scalar results.
 
 What we need here is a way to load float into vector4f and to store vector4f into floats that doesn't
@@ -94,17 +94,17 @@ depend on the size of vector4f (that is, 4). That's the aim of the load and stor
 ### 3.3 Load from and store to memory
 
 If you take a look at the xmmintrin.h file, you'll notice the compiler provides two kinds of load and store
-intrinsics :
+intrinsics:
 
-* \_mm\_load\_ps / \_mm\_store\_ps : these functions require the source / destination memory buffer to be aligned;
-the alignment boundary depends on the version of the SIMD you're using : 16 bits for SSE2, 32 bits for AVX.
-* \_mm\_loadu\_ps / \_mm\_storeu\_ps : these functions don't require any alignment of the source / destination
+* \_mm\_load\_ps / \_mm\_store\_ps: these functions require the source / destination memory buffer to be aligned;
+the alignment boundary depends on the version of the SIMD you're using: 16 bits for SSE2, 32 bits for AVX.
+* \_mm\_loadu\_ps / \_mm\_storeu\_ps: these functions don't require any alignment of the source / destination
 memory buffer.
 
 Intrinsics with alignment constraints are faster, and should be used by default; however, even if memory allocations
-are aligned, you can't guarantee that the memory buffer you pass to load / store function is aligned. Indeed, consider
-the matrix product C=AxB, where A is a 15x15 matrix of floats with linear row storage and B a vector that holds 15
-float elements. The computation of C[1] starts with:
+are aligned, you can't guarantee that the memory buffer you pass to the load / store function is aligned. Indeed,
+consider the matrix product C=AxB, where A is a 15x15 matrix of floats with linear row storage and B a vector that
+holds 15 float elements. The computation of C[1] starts with:
 {% coderay sample.cpp %}
 vector4f tmp(0);
 for(size_t k = 0; k < 12; k+=4)
@@ -177,12 +177,12 @@ Now, if we migrate our code from SSE to AVX, all we have to do is to replace vec
 with memory alignment issues, I come back to this in a few moments). We'll see in a future section how we can avoid the explicit
 usage of vector4f so we get full genericity. But for now, we have to face a last problem: in the sample code, we assumed the
 memory buffer wrapped by std::vector was 16-bytes aligned. <a name="simd_memory_allocator"></a>How do we know a memory allocation
-is aligned, and how do we know the boundary alignment ?
+is aligned, and how do we know the boundary alignment?
 
-The answer is it depends on your system and your compiler. On Windows 64 bits, dynamic memory allocation is 16-bytes aligned; in GNU
-systems, a block returned by malloc or realloc is always a multiple of 8 (32-bit systems) or 16 (64-bit system). So if we want to
-write code generic enough to handle many SIMD instruction set, it's clear we must provide a way to ensure memory allocation is
-always aligned, and is aligned on a given boundary.
+The answer is that it depends on your system and your compiler. On Windows 64 bits, dynamic memory allocation is 16-bytes aligned;
+in GNU systems, a block returned by malloc or realloc is always a multiple of 8 (32-bit systems) or 16 (64-bit system). So if we
+want to write code generic enough to handle many SIMD instruction set, it's clear we must provide a way to ensure memory allocation
+is always aligned, and is aligned on a given boundary.
 
 The solution is to design an aligned memory allocator and to use it in std::vector:
 
@@ -192,7 +192,7 @@ std::vector<float,simd_allocator> a,b,c,d,e.
 // ....
 {% endcoderay %}
 
-Now, we can handle any alignment boundary requirement through a typedef :
+Now, we can handle any alignment boundary requirement through a typedef:
 {% coderay sample.cpp %}
 typedef aligned_allocator<16> simd_allocator_sse; // SSE
 typedef aligned_allocator<32> simd_allocator_avx; // AVX 
@@ -200,9 +200,9 @@ typedef aligned_allocator<32> simd_allocator_avx; // AVX
 
 ### 3.4 Conditional branch
 
-Another issue we have to deal with, when we plug our wrapper, is conditional branching; indeed the "if(condition) ... else" statement
-evaluates a branch depending on the scalar condition, but the if statement works only for scalar condition, and we can't directly
-override it so it works with our wrappers. Consider the following code:
+Another issue we have to deal with, when we plug our wrapper, is conditional branching: indeed the if-else statement evaluates
+a branch depending on the scalar condition, but the if statement works only for scalar condition, and we can't directly override
+it so it works with our wrappers. Consider the following code:
 
 {% coderay sample.cpp %}
 std::vector<float> a,b,c,d,e;
@@ -237,14 +237,14 @@ for(size_t i = 0; i < a.size(); ++i)
 }
 {% endcoderay %}
 
-Although the "select" function is a bit overkill in the scalar case, it is exactly what we need for handling conditional
+Even though the "select" function is a bit overkill in the scalar case, it is exactly what we need for handling conditional
 branching with the SIMD wrappers. This means the two values (or "branches") of the conditional statement will be evaluated
 before we choose the one to affect, but we can't do better. And since you execute your conditional statement on 4 floats
 at once, it is still faster than the scalar version, even if suboptimal. The only case where the vectorized code could
 have a performance loss compared to the scalar code is if one of the conditional branch takes much more time to compute than
 the other and its result is seldom used.
 
-Knowing this, let's see how we can implement a select function taking SIMD wrappers parameters. Depending on the SSE version,
+Knowing this, let's see how we can implement a select function taking SIMD wrapper parameters. Depending on the SSE version,
 the compiler may provide a built-in function we can directly use as ternary operator. If not, we have to handle it with old
 bitwise logical:
 
@@ -279,11 +279,10 @@ for(size_t i = 0; i < n/4; i+=4)
 // ...
 {% endcoderay %}
 
-Although this code is far better than using directly intrinsics, it is still very verbose and, worse, not generic. If you want to update
-your code so it uses AVX instead of SSE, you have to replace every occurence of vector4f by vector8f, and to change the loop condition
-and increment so it takes into account the size of vector8f instead of the one of vector4f. Doing this in real code will quickly become
-painful.
+Although this code is far better than using intrinsics directly, it is still very verbose and, worse, not generic. If you want to update
+your code to take advantage of AVX instead of SSE, you need to replace every occurence of vector4f by vector8f, and to change the loop
+condition and increment so it takes into account the size of vector8f. Doing this in real code will quickly become painful.
 
-What we need here is full genericity, so replacing an instruction set by another requires almost no code change. That the point of
+What we need here is full genericity, so that replacing an instruction set by another requires almost no code change. That the point of
 the next section.
 

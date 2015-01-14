@@ -29,16 +29,16 @@ for(size_t i = 0; i < n/4; i+=4)
 
 <!-- more -->
 
-As said in the previous section, the first problem of this code is its lack of genericity; we are highly coupled to the
+As said in the previous section, the first problem of this code is its lack of genericity; we are highly coupled with the
 SIMD instruction set wrapped, and replacing it with another one requires code changes we should avoid. If we want to make
-the code independant from the SIMD instruction set and the related wrapper, we need to hide the data specific to this
-instruction set, that is, the vector type and its size (the number of scalars it holds).
+the code independant from the SIMD instruction set and the related wrapper, we need to hide the specifics of this instruction
+set, that is, the vector type and its size (the number of scalars it holds).
 
 ### 4.1 Hiding the wrapper type
 
-Basically, we want to be able to select the right wrapper depending on the scalar type and the instruction set used. When
-talking about selecting a type depending on another one, the first thing that comes to mind is type traits. Here our traits
-must contain the wrapper type and its size depending on the scalar type used:
+We want to be able to select the right wrapper depending on the scalar type and the instruction set used. When talking about
+selecting a type depending on another one, the first thing that comes to mind is type traits. Here our traits must contain the
+wrapper type and its size associated with the scalar type used:
 
 {% coderay lang:cpp simd_traits.hpp %}
 template <class T>
@@ -51,7 +51,7 @@ template <class T>
 
 The general definition of the traits class allows us to write code that works even for types that don't have related
 wrappers (numerical types defined by another user for instance). Then we need to specialize these definitions for float
-and double, depending on the instruction set we used. Assume we can detect the instruction set available on our system
+and double, depending on the considered instruction set. Assume we can detect the instruction set available on our system
 and save this information in a macro (we'll see how to do that in a later section). The specialization of the traits
 class will look like:
 
@@ -242,11 +242,11 @@ easy to read and to maintain.
 
 ### 4.3 Detecting the supported instruction set
 
-<a name="detecting_instr_set"></a>Until now, we've assumed we were able to detect at compile time the available instruction set. Let's see now how
-to do that. Compilers often provide preprocessor tokens depending on the available instruction set, but these tokens
-may vary from one compiler to another, so we have to standardize that. On most 64-bit compilers, the tokens look
-like **\_\_SSE\_\_** or **\_\_SSE3\_\_**, on 32-bit systems, Microsoft compiler sets the preprocessor token
-**\_M\_IX86\_FP** to 1 for SSE (vectorization of float) and 2 for SSE2 (vetorization of double and integers).
+<a name="detecting_instr_set"></a>Until now, we've assumed we were able to detect at compile time the available instruction set.
+Let's see now how to achieve this. Compilers often provide preprocessor tokens depending on the available instruction set, but
+these tokens may vary from one compiler to another, so we have to standardize that. On most 64-bit compilers, the tokens look
+like **\_\_SSE\_\_** or **\_\_SSE3\_\_**, on 32-bit systems, Microsoft compiler sets the preprocessor token **\_M\_IX86\_FP** to
+1 for SSE (vectorization of float) and 2 for SSE2 (vetorization of double and integers).
 
 Here is how we can standardize that:
 
@@ -326,7 +326,7 @@ can also use the **SSE\_INSTR\_SET** token to include the implementation file in
 // ...
 {% endcoderay %}
 
-Now from the client code, the only file to include is simd.hpp, dans everything will be available.
+Now from the client code, the only file to include is simd.hpp, and everything will be available.
 
 ### 4.4 Going further
 
@@ -368,9 +368,9 @@ We can add horizontal add function, useful for linear algebra products:
     }
 {% endcoderay %}
 
-Another usefull stuffs would be to write overloads of standard mathematical functions (exp, log, etc) that work
+Another useful project would be to write overloads of standard mathematical functions (exp, log, etc) that work
 with the wrappers.
 
-As you can see, writing the wrappers is just a beginning, you can then enrich them with whatever functionality
-you need but this goes beyond the topic of this series of articles.
+As you can see, writing the wrappers is just the beginning, you can then enrich them with whatever functionality
+you need but this goes beyond the topic of this first series of articles.
 
