@@ -248,7 +248,7 @@ template <class X>
 {% endcoderay %}
 
 Now, all vector4f needs to do is to inherit from simd_vector and implement the traditional operator+, and
-it will get operator+= and the operator+ overloads for free (and the same for other arithmetic operators):
+it will get += and ++ operators overloads for free (and the same for other arithmetic operators):
 
 {% coderay lang:cpp simd_sse.hpp %}
 class vector4f : public simd_vector<vector4f>
@@ -322,7 +322,7 @@ details and an alternative solution.
 
 ### 2.5 Comparison operators
 
-Since ordinary comparison operators return boolean value, we need to implement SIMD wrappers for boolean. The
+Since ordinary comparison operators return boolean value, we need to implement SIMD wrappers for booleans. The
 number of boolean elements of the wrappers will be directly related to the number of floating values wrapped
 by our arithmetic wrappers.
 
@@ -508,7 +508,7 @@ class vector4f
 {% endcoderay %}
 
 A last remark before we add the last comparison operators: since the template simd_vector_traits
-will never be defined but full specialized instead, there is no risk we forget to define it when
+will never be defined but fully specialized instead, there is no risk we forget to define it when
 we add a new wrapper, we'll have a compilation error.
 
 Finally, we can add the missing operators for the base class:
@@ -537,7 +537,7 @@ template <class X>
 Since float provides logical operators, our wrapper should do so. The implementation is the same
 as for the simd_vector_bool class, that is logical assignment operator in the simd_vector base class,
 and operator overloads for the inheriting classes. The implementation of operator|, operator&, operator^
-and operaotr~ is the same as the one for vector4fb, so I don't repeat it here.
+and operator~ is the same as the one for vector4fb, so I don't repeat it here.
 
 ### 2.7 Next step
 

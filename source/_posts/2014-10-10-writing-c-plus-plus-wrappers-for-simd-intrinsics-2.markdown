@@ -8,7 +8,7 @@ categories: [SIMD,Vectorization]
 
 ## <a name="section_1"></a>1. SSE/AVX intrinsics
 
-Before we start to write any code, we need to take a look at the instrinsics provided with the compiler. Henceforth, I
+Before we start writing any code, we need to take a look at the instrinsics provided with the compiler. Henceforth, I
 assume we use an Intel processor, recent enough to provide SSE 4 and AVX instruction sets; the compiler can be gcc or
 MSVC, the instrinsics they provide are almost the same.
 
@@ -52,7 +52,7 @@ Now if you take a look at these files, you will notice provided data and functio
 	* is T a character for the type of the data; T is omitted for float, i fot integers and d for double; thus \_\_m128d is the
 	data vector to use when performing SSE instructions on double.
 * intrinsic functions operating on floating point numbers are usually named **\_mm(XXX)_NAME_PT**, where :
-	* XXX is the number of bits of the SIMD registers; it is omitted for 128 bits regusters
+	* XXX is the number of bits of the SIMD registers; it is omitted for 128 bits registers
 	* NAME is the short name of the function (add, sub, cmp, ...)
 	* P indicates whether the functions operates on a packed data vector (p) or on a scalar only (s)
 	* T indicates the type of the floating point numbers : s for single precision, d for double precision

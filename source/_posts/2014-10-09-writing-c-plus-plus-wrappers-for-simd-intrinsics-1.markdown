@@ -10,23 +10,23 @@ categories: [SIMD,vectorization]
 
 SIMD (and more generally vectorization) is a longstanding topic and a lot has been written about it. But
 when I had to use it in my own applications, it appeared that most of the articles were theoretical,
-explaining the principles of the vectorization without practical examples of application; some of them,
-however, linked to libraries using vectorization, but extending these libraries for my personal needs was
-difficult, if not painfull. For this reason, I decided to implement my own library. This series of articles
-if the result of my work on the matter. I share it there in case someone faces the same problem.
+explaining the principles vectorization lacking practical examples; some of them, however, linked to
+libraries using vectorization, but extending these libraries for my personal needs was difficult, if not
+painfull. For this reason, I decided to implement my own library. This series of articles if the result
+of my work on the matter. I share it there in case someone faces the same problem.
 
 <!-- more -->
 
 SIMD stands for Single Instruction, Mutiple Data, a class of parallel computers which can perform
 the same operation on multiple data points simultaneously. Let's consider a summation we want to perform
-on two sets of four floating point numbers. The difference bewteen scalar and SIMD operations is illustrated
+on two sets of four floating point numbers. The difference between scalar and SIMD operations is illustrated
 below:
 
 ![simd_scalar](/images/simd_scalar.png)
 
 
 Using scalar operation, four add instructions must be executed one after other to obtain the sums, whereas
-SIMD uses a single instruction to achieve the same result. Thus SIMD operations yield higher efficiency than
+SIMD uses a single instruction to achieve the same result. Thus SIMD operations achieve higher efficiency than
 scalar operations.
 
 SIMD instructions were first used in the early 1970s, but only became available in consumer-grade chips in the
@@ -39,7 +39,7 @@ has implemented its own SIMD instruction set:
 + MDMX (MIPS processors)
 
 Many of these instruction sets still coexist nowadays, and you have to deal with all of them if you want to write portable
-software. This is a first argument for writing wrappers: capture the abstraction of SIMD operations in nice interfaces,
+software. This is a first argument for writing wrappers: capture the abstraction of SIMD operations with nice interfaces,
 and forget about the implementation you rely on.
 
 Although you can write assembly code to use the SIMD instructions, compilers usually provide built-in functions so you
@@ -50,7 +50,7 @@ same SIMD instruction set. Fortunately, compilers tend to standardize intrinsics
 and we only have to handle the differences between the various SIMD instruction sets.
 
 In this series of article, the focus will be on wrapping Intel's SIMD instruction set, although the wrappers will be generic
-enough so that plugging other instruction set is easy.
+enough so that plugging other instruction sets is easy.
 
 Since SIMD instructions are longstanding, you might wonder if writing your own wrapper is relevant; maybe you could reuse
 an existing library wrapping these intrinsics. Well, it depends on your needs.
@@ -60,7 +60,7 @@ instruction set (different versions of SSE and AVX), but he doesn't make heavy u
 implementation. Hence adding a new wrapper (for a new instruction set, a new version of an existing one or even for
 your own numerical types)  requires to type a lot of code that could otherwise have been factorized. Moreover, some essential
 tools are missing, such as an aligned memory allocator (we will see why you need such a tool later). However his library is
-a good point to start.
+a good starting point.
 
 Another library you might want to consider is the [Numerical Template Toolbox](https://github.com/MetaScale/nt2).
 Although it has a very comprehensive set of mathematical functions, its major drawback is that it really slows the
