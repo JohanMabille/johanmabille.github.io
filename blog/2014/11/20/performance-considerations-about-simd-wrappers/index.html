@@ -114,7 +114,7 @@ performances. They raised many possible performance hits in the implementation:<
   <li>Arguments passed by const references instead of values, introducing a useless indirection and preventing the compiler from
 keeping the variable into registers</li>
   <li>Indirection due to the wrapping of __mXXX types into objects</li>
-  <li>Operator overloads preventing the compiler from proper instructions reordering during optimization</li>
+  <li>Operator overloads preventing the compiler from proper instruction reordering during optimization</li>
 </ul>
 
 <!-- more -->
@@ -406,7 +406,7 @@ is removed:</p>
 overhead. Since the only change we’ve made from the previous wrapper is to remove the CRTP layer, we have the culprit for the overhead
 we noticed in the beginning: the CRTP layer.</p>
 
-<p>I first thought of a Empty Base Optimization problem, but priting the size of both implementations of the wrapper proved me wrong: in both
+<p>I first thought of a Empty Base Optimization problem, but printing the size of both implementations of the wrapper proved me wrong: in both
 case, the size of the wrapper is 16, so it fits in the XMM registers. So I must admit, I still have no explanation for this problem.</p>
 
 <p>In the next section, I will consider the wrapper implementation that doesn’t use CRTP. Now that we’ve fixed this issue, let’s
@@ -944,7 +944,7 @@ vector4f2 test_sse_c2(vector4f2 a, vector4f2 b, vector4f2 c, vector4f2 d)
 </tr></table>
  </figure></notextile></div>
 
-<p>This is much less elegant, but you are guaranteed there won’t be any performance issue.</p>
+<p>This is much less elegant, but it comes with the guarantee that there won’t be any performance issue.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 

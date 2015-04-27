@@ -4,7 +4,7 @@
   <title><![CDATA[The C++ scientist]]></title>
   <link href="http://jmabille.github.io/atom.xml" rel="self"/>
   <link href="http://jmabille.github.io/"/>
-  <updated>2015-01-06T20:18:22+01:00</updated>
+  <updated>2015-04-27T09:18:23+02:00</updated>
   <id>http://jmabille.github.io/</id>
   <author>
     <name><![CDATA[Johan Mabille]]></name>
@@ -525,7 +525,7 @@ performances. They raised many possible performance hits in the implementation:<
   <li>Arguments passed by const references instead of values, introducing a useless indirection and preventing the compiler from
 keeping the variable into registers</li>
   <li>Indirection due to the wrapping of __mXXX types into objects</li>
-  <li>Operator overloads preventing the compiler from proper instructions reordering during optimization</li>
+  <li>Operator overloads preventing the compiler from proper instruction reordering during optimization</li>
 </ul>
 
 <!-- more -->
@@ -817,7 +817,7 @@ is removed:</p>
 overhead. Since the only change we’ve made from the previous wrapper is to remove the CRTP layer, we have the culprit for the overhead
 we noticed in the beginning: the CRTP layer.</p>
 
-<p>I first thought of a Empty Base Optimization problem, but priting the size of both implementations of the wrapper proved me wrong: in both
+<p>I first thought of a Empty Base Optimization problem, but printing the size of both implementations of the wrapper proved me wrong: in both
 case, the size of the wrapper is 16, so it fits in the XMM registers. So I must admit, I still have no explanation for this problem.</p>
 
 <p>In the next section, I will consider the wrapper implementation that doesn’t use CRTP. Now that we’ve fixed this issue, let’s
@@ -1355,7 +1355,7 @@ vector4f2 test_sse_c2(vector4f2 a, vector4f2 b, vector4f2 c, vector4f2 d)
 </tr></table>
  </figure></notextile></div>
 
-<p>This is much less elegant, but you are guaranteed there won’t be any performance issue.</p>
+<p>This is much less elegant, but it comes with the guarantee that there won’t be any performance issue.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
@@ -1413,16 +1413,16 @@ std::vector&lt;<span class="predefined-type">float</span>&gt; a, b, c, d, e
 
 <!-- more -->
 
-<p>As said in the previous section, the first problem of this code is its lack of genericity; we are highly coupled to the
+<p>As said in the previous section, the first problem of this code is its lack of genericity; we are highly coupled with the
 SIMD instruction set wrapped, and replacing it with another one requires code changes we should avoid. If we want to make
-the code independant from the SIMD instruction set and the related wrapper, we need to hide the data specific to this
-instruction set, that is, the vector type and its size (the number of scalars it holds).</p>
+the code independant from the SIMD instruction set and the related wrapper, we need to hide the specifics of this instruction
+set, that is, the vector type and its size (the number of scalars it holds).</p>
 
 <h3 id="hiding-the-wrapper-type">4.1 Hiding the wrapper type</h3>
 
-<p>Basically, we want to be able to select the right wrapper depending on the scalar type and the instruction set used. When
-talking about selecting a type depending on another one, the first thing that comes to mind is type traits. Here our traits
-must contain the wrapper type and its size depending on the scalar type used:</p>
+<p>We want to be able to select the right wrapper depending on the scalar type and the instruction set used. When talking about
+selecting a type depending on another one, the first thing that comes to mind is type traits. Here our traits must contain the
+wrapper type and its size associated with the scalar type used:</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>simd_traits.hpp </span></figcaption>
  <table class="CodeRay"><tr>
@@ -1447,7 +1447,7 @@ must contain the wrapper type and its size depending on the scalar type used:</p
 
 <p>The general definition of the traits class allows us to write code that works even for types that don’t have related
 wrappers (numerical types defined by another user for instance). Then we need to specialize these definitions for float
-and double, depending on the instruction set we used. Assume we can detect the instruction set available on our system
+and double, depending on the considered instruction set. Assume we can detect the instruction set available on our system
 and save this information in a macro (we’ll see how to do that in a later section). The specialization of the traits
 class will look like:</p>
 
@@ -1812,11 +1812,11 @@ easy to read and to maintain.</p>
 
 <h3 id="detecting-the-supported-instruction-set">4.3 Detecting the supported instruction set</h3>
 
-<p><a name="detecting_instr_set"></a>Until now, we’ve assumed we were able to detect at compile time the available instruction set. Let’s see now how
-to do that. Compilers often provide preprocessor tokens depending on the available instruction set, but these tokens
-may vary from one compiler to another, so we have to standardize that. On most 64-bit compilers, the tokens look
-like <strong>__SSE__</strong> or <strong>__SSE3__</strong>, on 32-bit systems, Microsoft compiler sets the preprocessor token
-<strong>_M_IX86_FP</strong> to 1 for SSE (vectorization of float) and 2 for SSE2 (vetorization of double and integers).</p>
+<p><a name="detecting_instr_set"></a>Until now, we’ve assumed we were able to detect at compile time the available instruction set.
+Let’s see now how to achieve this. Compilers often provide preprocessor tokens depending on the available instruction set, but
+these tokens may vary from one compiler to another, so we have to standardize that. On most 64-bit compilers, the tokens look
+like <strong>__SSE__</strong> or <strong>__SSE3__</strong>, on 32-bit systems, Microsoft compiler sets the preprocessor token <strong>_M_IX86_FP</strong> to
+1 for SSE (vectorization of float) and 2 for SSE2 (vetorization of double and integers).</p>
 
 <p>Here is how we can standardize that:</p>
 
@@ -1976,7 +1976,7 @@ can also use the <strong>SSE_INSTR_SET</strong> token to include the implementat
 </tr></table>
  </figure></notextile></div>
 
-<p>Now from the client code, the only file to include is simd.hpp, dans everything will be available.</p>
+<p>Now from the client code, the only file to include is simd.hpp, and everything will be available.</p>
 
 <h3 id="going-further">4.4 Going further</h3>
 
@@ -2059,11 +2059,11 @@ Well, first we could add a method to retrieve an element in the vector:</p>
 </tr></table>
  </figure></notextile></div>
 
-<p>Another usefull stuffs would be to write overloads of standard mathematical functions (exp, log, etc) that work
+<p>Another useful project would be to write overloads of standard mathematical functions (exp, log, etc) that work
 with the wrappers.</p>
 
-<p>As you can see, writing the wrappers is just a beginning, you can then enrich them with whatever functionality
-you need but this goes beyond the topic of this series of articles.</p>
+<p>As you can see, writing the wrappers is just the beginning, you can then enrich them with whatever functionality
+you need but this goes beyond the topic of this first series of articles.</p>
 
 ]]></content>
   </entry>
@@ -2194,7 +2194,7 @@ std::vector&lt;<span class="predefined-type">float</span>&gt;a, b, c, d, e;
 </tr></table>
  </figure></notextile></div>
 
-<p>The first problem is we need a way to store a vector4f into 4 floats; as said in the previous paragraph, we
+<p>The first problem is that we need a way to store a vector4f into 4 floats; as said in the previous paragraph, we
 can add to our wrappers a method that returns a scalar within the vector4f and invoke it that way:</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>sample.cpp </span></figcaption>
@@ -2214,7 +2214,7 @@ e[i+<span class="integer">3</span>] = ev[<span class="integer">3</span>];
 </tr></table>
  </figure></notextile></div>
 
-<p>The second problem is this code is not generic; if you migrate from SSE to AVX, you’ll have to update the
+<p>The second problem is that this code is not generic; if you migrate from SSE to AVX, you’ll have to update the
 initialization of your wrapper so it takes 8 floats; the same for storing your vector4f in scalar results.</p>
 
 <p>What we need here is a way to load float into vector4f and to store vector4f into floats that doesn’t
@@ -2223,19 +2223,19 @@ depend on the size of vector4f (that is, 4). That’s the aim of the load and st
 <h3 id="load-from-and-store-to-memory">3.3 Load from and store to memory</h3>
 
 <p>If you take a look at the xmmintrin.h file, you’ll notice the compiler provides two kinds of load and store
-intrinsics :</p>
+intrinsics:</p>
 
 <ul>
-  <li>_mm_load_ps / _mm_store_ps : these functions require the source / destination memory buffer to be aligned;
-the alignment boundary depends on the version of the SIMD you’re using : 16 bits for SSE2, 32 bits for AVX.</li>
-  <li>_mm_loadu_ps / _mm_storeu_ps : these functions don’t require any alignment of the source / destination
+  <li>_mm_load_ps / _mm_store_ps: these functions require the source / destination memory buffer to be aligned;
+the alignment boundary depends on the version of the SIMD you’re using: 16 bits for SSE2, 32 bits for AVX.</li>
+  <li>_mm_loadu_ps / _mm_storeu_ps: these functions don’t require any alignment of the source / destination
 memory buffer.</li>
 </ul>
 
 <p>Intrinsics with alignment constraints are faster, and should be used by default; however, even if memory allocations
-are aligned, you can’t guarantee that the memory buffer you pass to load / store function is aligned. Indeed, consider
-the matrix product C=AxB, where A is a 15x15 matrix of floats with linear row storage and B a vector that holds 15
-float elements. The computation of C[1] starts with:</p>
+are aligned, you can’t guarantee that the memory buffer you pass to the load / store function is aligned. Indeed,
+consider the matrix product C=AxB, where A is a 15x15 matrix of floats with linear row storage and B a vector that
+holds 15 float elements. The computation of C[1] starts with:</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>sample.cpp </span></figcaption>
  <table class="CodeRay"><tr>
@@ -2379,12 +2379,12 @@ std::vector&lt;<span class="predefined-type">float</span>&gt;a, b, c, d, e;
 with memory alignment issues, I come back to this in a few moments). We’ll see in a future section how we can avoid the explicit
 usage of vector4f so we get full genericity. But for now, we have to face a last problem: in the sample code, we assumed the
 memory buffer wrapped by std::vector was 16-bytes aligned. <a name="simd_memory_allocator"></a>How do we know a memory allocation
-is aligned, and how do we know the boundary alignment ?</p>
+is aligned, and how do we know the boundary alignment?</p>
 
-<p>The answer is it depends on your system and your compiler. On Windows 64 bits, dynamic memory allocation is 16-bytes aligned; in GNU
-systems, a block returned by malloc or realloc is always a multiple of 8 (32-bit systems) or 16 (64-bit system). So if we want to
-write code generic enough to handle many SIMD instruction set, it’s clear we must provide a way to ensure memory allocation is
-always aligned, and is aligned on a given boundary.</p>
+<p>The answer is that it depends on your system and your compiler. On Windows 64 bits, dynamic memory allocation is 16-bytes aligned;
+in GNU systems, a block returned by malloc or realloc is always a multiple of 8 (32-bit systems) or 16 (64-bit system). So if we
+want to write code generic enough to handle many SIMD instruction set, it’s clear we must provide a way to ensure memory allocation
+is always aligned, and is aligned on a given boundary.</p>
 
 <p>The solution is to design an aligned memory allocator and to use it in std::vector:</p>
 
@@ -2403,7 +2403,7 @@ std::vector&lt;<span class="predefined-type">float</span>,simd_allocator&gt; a,b
 </tr></table>
  </figure></notextile></div>
 
-<p>Now, we can handle any alignment boundary requirement through a typedef :</p>
+<p>Now, we can handle any alignment boundary requirement through a typedef:</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>sample.cpp </span></figcaption>
  <table class="CodeRay"><tr>
@@ -2420,9 +2420,9 @@ std::vector&lt;<span class="predefined-type">float</span>,simd_allocator&gt; a,b
 
 <h3 id="conditional-branch">3.4 Conditional branch</h3>
 
-<p>Another issue we have to deal with, when we plug our wrapper, is conditional branching; indeed the “if(condition) … else” statement
-evaluates a branch depending on the scalar condition, but the if statement works only for scalar condition, and we can’t directly
-override it so it works with our wrappers. Consider the following code:</p>
+<p>Another issue we have to deal with, when we plug our wrapper, is conditional branching: indeed the if-else statement evaluates
+a branch depending on the scalar condition, but the if statement works only for scalar condition, and we can’t directly override
+it so it works with our wrappers. Consider the following code:</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>sample.cpp </span></figcaption>
  <table class="CodeRay"><tr>
@@ -2494,14 +2494,14 @@ std::vector&lt;<span class="predefined-type">float</span>&gt; a,b,c,d,e;
 </tr></table>
  </figure></notextile></div>
 
-<p>Although the “select” function is a bit overkill in the scalar case, it is exactly what we need for handling conditional
+<p>Even though the “select” function is a bit overkill in the scalar case, it is exactly what we need for handling conditional
 branching with the SIMD wrappers. This means the two values (or “branches”) of the conditional statement will be evaluated
 before we choose the one to affect, but we can’t do better. And since you execute your conditional statement on 4 floats
 at once, it is still faster than the scalar version, even if suboptimal. The only case where the vectorized code could
 have a performance loss compared to the scalar code is if one of the conditional branch takes much more time to compute than
 the other and its result is seldom used.</p>
 
-<p>Knowing this, let’s see how we can implement a select function taking SIMD wrappers parameters. Depending on the SSE version,
+<p>Knowing this, let’s see how we can implement a select function taking SIMD wrapper parameters. Depending on the SSE version,
 the compiler may provide a built-in function we can directly use as ternary operator. If not, we have to handle it with old
 bitwise logical:</p>
 
@@ -2573,12 +2573,11 @@ vector4f select(<span class="directive">const</span> vector4fb&amp; cond, <span 
 </tr></table>
  </figure></notextile></div>
 
-<p>Although this code is far better than using directly intrinsics, it is still very verbose and, worse, not generic. If you want to update
-your code so it uses AVX instead of SSE, you have to replace every occurence of vector4f by vector8f, and to change the loop condition
-and increment so it takes into account the size of vector8f instead of the one of vector4f. Doing this in real code will quickly become
-painful.</p>
+<p>Although this code is far better than using intrinsics directly, it is still very verbose and, worse, not generic. If you want to update
+your code to take advantage of AVX instead of SSE, you need to replace every occurence of vector4f by vector8f, and to change the loop
+condition and increment so it takes into account the size of vector8f. Doing this in real code will quickly become painful.</p>
 
-<p>What we need here is full genericity, so replacing an instruction set by another requires almost no code change. That the point of
+<p>What we need here is full genericity, so that replacing an instruction set by another requires almost no code change. That the point of
 the next section.</p>
 
 ]]></content>
@@ -2591,18 +2590,18 @@ the next section.</p>
     <id>http://jmabille.github.io/blog/2014/10/10/writing-c-plus-plus-wrappers-for-simd-intrinsics-3</id>
     <content type="html"><![CDATA[<h2 id="a-namesection2a2-first-version-of-wrappers"><a name="section_2"></a>2. First version of wrappers</h2>
 
-<p>Now that we know a little more about SSE and AVX, let’s start writing code; the wrappers will have
-a data vector member and provide arithmetic, comparison and logical operators overloads. Through this
-section, I will mainly focus on vector4f, the wrapper around __m128, but translating the code for
-other data vectors should not be difficult thanks to the previous section. Since the wrappers will be
-used as numerical types, they must have value semantics, that is they must define copy constructor,
+<p>Now that we know a little more about SSE and AVX, let’s write some  code; the wrappers will have
+a data vector member and provide arithmetic, comparison and logical operators overloads. Throughout
+this section, I will mainly focus on vector4f, the wrapper around __m128, but translating the code
+for other data vectors should not be difficult thanks to the previous section. Since the wrappers will
+be used as numerical types, they must have value semantics, that is they must define copy constructor,
 assignment operator and non-virtual destructor.</p>
 
 <!-- more -->
 
 <h3 id="initialization-and-assignment">2.1 Initialization and assignment</h3>
 
-<p>SSE and AVX data vectors can be initialized from different inputs : a single value for all elements,
+<p>SSE and AVX data vectors can be initialized from different inputs: a single value for all elements,
 a value per element, or another data vector.</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>simd_sse.hpp </span></figcaption>
@@ -2671,7 +2670,7 @@ a value per element, or another data vector.</p>
 <h3 id="implicit-conversion">2.2 Implicit conversion</h3>
 
 <p>The operators overloads have to access the m_value member of the wrapper so they can pass it as an argument to the intrinsic
-functions :</p>
+functions:</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>overload sample</span></figcaption>
  <table class="CodeRay"><tr>
@@ -2691,12 +2690,12 @@ vector4f <span class="directive">operator</span>+(<span class="directive">const<
  </figure></notextile></div>
 
 <p>We could declare the operator overloads as friend functions of the wrapper class, or provide a get method returning the internal
-m_value. Both of these solutions work, but aren’t elegant : the first requires a huge amount of friend declarations, the second
+m_value. Both of these solutions work, but aren’t elegant: the first requires a huge amount of friend declarations, the second
 produces heavy code unpleasant to read.</p>
 
-<p>A more elegant solution is to provide a conversion operator from vector4f to __m128 ; since vector4f can be implicitly converted
+<p>A more elegant solution is to provide a conversion operator from vector4f to __m128; since vector4f can be implicitly converted
 from __m128, we can now use vector4f or __m128 indifferently. Moreover we can save the vector4f copy constructor and assignment
-operator :</p>
+operator:</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>simd_sse.hpp </span></figcaption>
  <table class="CodeRay"><tr>
@@ -2745,7 +2744,7 @@ operator :</p>
 
     <span class="directive">inline</span> <span class="directive">operator</span> __m128() <span class="directive">const</span> { <span class="keyword">return</span> m_value; }
 
-    <span class="comment">// vector4f(const vector4f&amp;) and operator=(const vector4f&amp;) are not required anymore :</span>
+    <span class="comment">// vector4f(const vector4f&amp;) and operator=(const vector4f&amp;) are not required anymore:</span>
     <span class="comment">// the conversion operator will be called before calling vector4f(const __m128&amp;)</span>
     <span class="comment">// or operator=(const __m128&amp;)</span>
 
@@ -2763,7 +2762,7 @@ operator :</p>
 computed assignment operators and to use them in operators overloads, so they don’t have to access
 private members of vector4f; but since vector4f can be implicitly converted to __m128, we can
 do the opposite and avoid using a temporary (this won’t have any impact on performance since
-the compiler can optimize it, but produces shorter and more pleasant code to read) :</p>
+the compiler can optimize it, but produces shorter and more pleasant code to read):</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>simd_sse.hpp </span></figcaption>
  <table class="CodeRay"><tr>
@@ -2810,7 +2809,7 @@ the compiler can optimize it, but produces shorter and more pleasant code to rea
 
 <h3 id="the-need-for-a-base-class">2.4 The need for a base class</h3>
 
-<p>We could go ahead and write the remaining arithmetic operators overloads, just as we did before :</p>
+<p>We could go ahead and write the remaining arithmetic operators overloads, just as we did before:</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>simd_sse.hpp </span></figcaption>
  <table class="CodeRay"><tr>
@@ -2852,10 +2851,10 @@ vector4f <span class="directive">operator</span>++(<span class="predefined-type"
  </figure></notextile></div>
 
 <p>But wait! Whenever you add a new wrapper, you’ll have to write these operators overloads again. Besides
-the fact you’ll type a lot of boilerplate code, computed assignment operators will be the same as those
-of vector4f (that is, invoke the corresponding operator overload and return the object), and even some
-operators overloads will have the same code as the one of vector4f operators. Code duplication is never
-good, and we should look for ways to avoid it.</p>
+the fact that you will need to type a lot of boilerplate code, computed assignment operators will be the
+same as those of vector4f (that is, invoke the corresponding operator overload and return the object),
+and even some operators overloads will have the same code as the one of vector4f operators. Code duplication
+is never good, and we should look for ways to avoid it.</p>
 
 <p>If we had encountered this problem for classes with entity semantics, we would have captured the common code
 into a base class, and delegate the specific behavior to virtual methods, a typical use of classical dynamic
@@ -2866,8 +2865,8 @@ don’t know about this pattern, the most important thing to know is CRTP allows
 classes from the base class just as you would do through virtual methods, except the target methods are resolved
 at compile time.</p>
 
-<p>Let’s call our base class simd_vector, it will be used as base class for every wrapper ; here is what it should
-look like :</p>
+<p>Let’s call our base class simd_vector, it will be used as base class for every wrapper; here is what it should
+look like:</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>simd_base.hpp</span></figcaption>
  <table class="CodeRay"><tr>
@@ -3027,7 +3026,7 @@ look like :</p>
  </figure></notextile></div>
 
 <p>Now, all vector4f needs to do is to inherit from simd_vector and implement the traditional operator+, and
-it will get operator+= and the operator+ overloads for free (and the same for other arithmetic operators) :</p>
+it will get += and ++ operators overloads for free (and the same for other arithmetic operators):</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>simd_sse.hpp </span></figcaption>
  <table class="CodeRay"><tr>
@@ -3109,7 +3108,7 @@ it will get operator+= and the operator+ overloads for free (and the same for ot
 };
 
 <span class="comment">// Based on this operator implementation, simd_vector&lt;vector4f&gt; will generate</span>
-<span class="comment">// the following methods and overloads :</span>
+<span class="comment">// the following methods and overloads:</span>
 <span class="comment">// vector4f&amp; operator+=(const vector4f&amp;)</span>
 <span class="comment">// vector4f operator++(int)</span>
 <span class="comment">// vector4f&amp; operator++()</span>
@@ -3141,15 +3140,15 @@ it will get operator+= and the operator+ overloads for free (and the same for ot
 <p>Looks good, doesn’t it ? Every time we want to implement a new wrapper, we only have to code 4 operators and
 make our class inherit from simd_vector, and all overloads will be generated for free!</p>
 
-<p>Just one remark before we continue with comparison operators ; if you have noticed, the base class simd_vector
+<p>Just one remark before we continue with comparison operators; if you have noticed, the base class simd_vector
 defines a type named value_type, depending on the nature of the inheriting class (float for vector4f, double
 for vector2d, …). However, this type is not defined by the inheriting class, but by a traits class instead.
-This is a CRTP constraint : you can access the inheriting class as long the compiler doesn’t instantiate the
-code; if you call a method defined in the inheriting class, the compiler will assume it exists until it has to
-instantiate the code. But type resolution is different and you have to define it out of the inheriting class.
-This is one reason for the existence of the simd_vector_traits class. Other reasons will be discussed in a later
-section. Note the class containing the type definition doesn’t have to be fully defined at this point : a simple
-forward declaration is sufficient.</p>
+This is a constraint of the CRTP pattern: you can access the inheriting class as long the compiler doesn’t
+instantiate the code; if you call a method defined in the inheriting class, the compiler will assume it exists
+until it has to instantiate the code. But type resolution is different and you have to define it out of the
+inheriting class. This is one reason for the existence of the simd_vector_traits class. Other reasons will be
+discussed in a later section. Note the class containing the type definition doesn’t have to be fully defined
+at this point: a simple forward declaration is sufficient.</p>
 
 <p><strong>EDIT 20/11/2014:</strong> it seems the CRTP layer introduces a slight overhead (at least with GCC), see this
 <a href="http://jmabille.github.io/blog/2014/11/20/performance-considerations-about-simd-wrappers/">article</a> for more
@@ -3157,14 +3156,14 @@ details and an alternative solution.</p>
 
 <h3 id="comparison-operators">2.5 Comparison operators</h3>
 
-<p>Since ordinary comparison operators return boolean value, we need to implement SIMD wrappers for boolean. The
+<p>Since ordinary comparison operators return boolean value, we need to implement SIMD wrappers for booleans. The
 number of boolean elements of the wrappers will be directly related to the number of floating values wrapped
 by our arithmetic wrappers.</p>
 
-<p>In order not to duplicate code, we’ll use the same architecture as for arithmetic wrappers : a CRTP with
+<p>In order not to duplicate code, we’ll use the same architecture as for arithmetic wrappers: a CRTP with
 base class for common code, and inheriting classes for specific implementation. Here is the implementation
 of the simd_vector_bool class, the base used to generate bitwise assignment operators and logical operators
-overloads in inheriting classes :</p>
+overloads in inheriting classes:</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>simd_base.hpp </span></figcaption>
  <table class="CodeRay"><tr>
@@ -3297,7 +3296,7 @@ overloads in inheriting classes :</p>
 </tr></table>
  </figure></notextile></div>
 
-<p>The inheriting class vector4fb only has to provide bitwise operators and equality/inequality operators :</p>
+<p>The inheriting class vector4fb only has to provide bitwise operators and equality/inequality operators:</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>simd_sse.hpp</span></figcaption>
  <table class="CodeRay"><tr>
@@ -3414,10 +3413,10 @@ overloads in inheriting classes :</p>
 </tr></table>
  </figure></notextile></div>
 
-<p>Now we have wrappers for boolean, we can add the comparison operators to the vector4f class; again,
+<p>Now that we have wrappers for boolean, we can add the comparison operators to the vector4f class; again,
 to avoid code duplication, some operators will be implemented in the base class and will be based on
 specific operators implemented in the inheriting class. Let’s start with the vector4f comparison
-operators :</p>
+operators:</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>simd_sse.hpp </span></figcaption>
  <table class="CodeRay"><tr>
@@ -3475,7 +3474,7 @@ type. If these operators were implemented for vector4f, we would have return vec
 they are implemented for the base class, they need to return the boolean wrapper related to the
 arithmetic wrapper, i.e the inheriting class. What we need here is to provide a mapping between
 arithmetic wrapper type and boolean wrapper type somewhere. Remember the simd_vector_traits structure
-we declared to define our value_type ? It would be the perfect place for defining that mapping :</p>
+we declared to define our value_type ? It would be the perfect place for defining that mapping:</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>simd_sse.hpp</span></figcaption>
  <table class="CodeRay"><tr>
@@ -3516,11 +3515,11 @@ we declared to define our value_type ? It would be the perfect place for definin
 </tr></table>
  </figure></notextile></div>
 
-<p>A last remark before we add the last comparison operators : since the template simd_vector_traits
-will never be defined but full specialized instead, there is no risk we forget to define it when
+<p>A last remark before we add the last comparison operators: since the template simd_vector_traits
+will never be defined but fully specialized instead, there is no risk we forget to define it when
 we add a new wrapper, we’ll have a compilation error.</p>
 
-<p>Finally, we can add the missing operators for the base class :</p>
+<p>Finally, we can add the missing operators for the base class:</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>simd_base.hpp </span></figcaption>
  <table class="CodeRay"><tr>
@@ -3568,7 +3567,7 @@ we add a new wrapper, we’ll have a compilation error.</p>
 <p>Since float provides logical operators, our wrapper should do so. The implementation is the same
 as for the simd_vector_bool class, that is logical assignment operator in the simd_vector base class,
 and operator overloads for the inheriting classes. The implementation of operator|, operator&amp;, operator^
-and operaotr~ is the same as the one for vector4fb, so I don’t repeat it here.</p>
+and operator~ is the same as the one for vector4fb, so I don’t repeat it here.</p>
 
 <h3 id="next-step">2.7 Next step</h3>
 
@@ -3588,11 +3587,11 @@ similar to what has been done in this section.</p>
     <id>http://jmabille.github.io/blog/2014/10/10/writing-c-plus-plus-wrappers-for-simd-intrinsics-2</id>
     <content type="html"><![CDATA[<h2 id="a-namesection1a1-sseavx-intrinsics"><a name="section_1"></a>1. SSE/AVX intrinsics</h2>
 
-<p>Before we start to write any code, we need to take a look at the instrinsics the compiler provides, and how things are
-organized. For the rest of this article and the following ones, I assume we use an Intel processor, recent enough to
-provide SSE 4 and AVX; the compiler can be gcc or MSVC, the instrinsics they provide are almost the same.</p>
+<p>Before we start writing any code, we need to take a look at the instrinsics provided with the compiler. Henceforth, I
+assume we use an Intel processor, recent enough to provide SSE 4 and AVX instruction sets; the compiler can be gcc or
+MSVC, the instrinsics they provide are almost the same.</p>
 
-<p>If you already know about SSE / AVX intrinsics you can skip this section.
+<p>If you already know about SSE / AVX intrinsics you may skip this section.
 <!-- more --></p>
 
 <h3 id="registers">1.1 Registers</h3>
@@ -3608,8 +3607,8 @@ registers can still be addressed since they’re the lower part of ymm registers
 
 <h3 id="files-to-include">1.2 Files to include</h3>
 
-<p>The intrinsic functions are splitted among different files, depending on the version of the SIMD instruction set they
-belong to :</p>
+<p>Intrinsic functions are made available in different header files, based on the version of the SIMD instruction set they
+belong to:</p>
 
 <ul>
   <li>&lt;xmmintrin.h&gt; : SSE, operations on 4 single precision floating point numbers (float).</li>
@@ -3622,12 +3621,12 @@ belong to :</p>
 </ul>
 
 <p>Each of these files includes the previous one, so you only have to include the one matching the highest version of the SIMD
-instruction set available in your processor. Later we’ll see how to detect at compile time which version on SIMD instruction
+instruction set available in your processor. Later we will see how to detect at compile time which version on SIMD instruction
 set is available and thus which file to include. For now, just assume we’re able to include the right file each time we need it.</p>
 
 <h3 id="naming-rules">1.3 Naming rules</h3>
 
-<p>Now if you take a look at these files, you’ll notice provided data and functions follow some naming rules :</p>
+<p>Now if you take a look at these files, you will notice provided data and functions follow some naming rules :</p>
 
 <ul>
   <li>data vectors are named <strong>__mXXX(T)</strong>, where :
@@ -3639,7 +3638,7 @@ set is available and thus which file to include. For now, just assume we’re ab
   </li>
   <li>intrinsic functions operating on floating point numbers are usually named <strong>_mm(XXX)_NAME_PT</strong>, where :
     <ul>
-      <li>XXX is the number of bits of the SIMD registers; it is omitted for 128 bits regusters</li>
+      <li>XXX is the number of bits of the SIMD registers; it is omitted for 128 bits registers</li>
       <li>NAME is the short name of the function (add, sub, cmp, …)</li>
       <li>P indicates whether the functions operates on a packed data vector (p) or on a scalar only (s)</li>
       <li>T indicates the type of the floating point numbers : s for single precision, d for double precision</li>
@@ -3668,7 +3667,7 @@ set is available and thus which file to include. For now, just assume we’re ab
   <li>Setting : _mm_set_xx, _mm_setzero_xx, …</li>
 </ul>
 
-<p>Some intrinsics won’t be wrapped, and some of them will bu used only to build higher level functions in the wrappers.</p>
+<p>I will not provide wrappers for all intrinsics,  and some of them will be used only to build higher level functions in the wrappers.</p>
 
 <h3 id="sample-code">1.5 Sample code</h3>
 
@@ -3700,7 +3699,7 @@ change your mind :</p>
  </figure></notextile></div>
 
 <p>Quite hard to read, right ? And this is just for two multiplications and one addition; imagine using intrinsics in a huge amount of code,
-and you’ll get code really hard to understand and to maintain. What we need is a way to use __m128 with traditional arithmetic
+and you will get code really hard to understand and to maintain. What we need is a way to use __m128 with traditional arithmetic
 operators, as we do with float :</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>wrapped_sample.cpp </span></figcaption>
@@ -3738,26 +3737,26 @@ operators, as we do with float :</p>
 
 <p>SIMD (and more generally vectorization) is a longstanding topic and a lot has been written about it. But
 when I had to use it in my own applications, it appeared that most of the articles were theoretical,
-explaining the principles of the vectorization without practical examples of application; some of them,
-however, linked to libraries using vectorization, but extending these libraries for my personal needs was
-difficult, if not painfull. For this reason, I decided to implement my own library. This series of articles
-if the result of my work on the matter. I share it there in case someone faces the same problem.</p>
+explaining the principles vectorization lacking practical examples; some of them, however, linked to
+libraries using vectorization, but extending these libraries for my personal needs was difficult, if not
+painfull. For this reason, I decided to implement my own library. This series of articles if the result
+of my work on the matter. I share it there in case someone faces the same problem.</p>
 
 <!-- more -->
 
 <p>SIMD stands for Single Instruction, Mutiple Data, a class of parallel computers which can perform
 the same operation on multiple data points simultaneously. Let’s consider a summation we want to perform
-on two sets of four floating point numbers. The difference bewteen scalar and SIMD operations is illustrated
+on two sets of four floating point numbers. The difference between scalar and SIMD operations is illustrated
 below:</p>
 
 <p><img src="http://jmabille.github.io/images/simd_scalar.png" alt="simd_scalar" /></p>
 
 <p>Using scalar operation, four add instructions must be executed one after other to obtain the sums, whereas
-SIMD uses a single instruction to achieve the same result. Thus SIMD operations yield higher efficiency than
+SIMD uses a single instruction to achieve the same result. Thus SIMD operations achieve higher efficiency than
 scalar operations.</p>
 
 <p>SIMD instructions were first used in the early 1970s, but only became available in consumer-grade chips in the
-90s to allow real-time video processing and advance computer graphics for video games. Each processor manufacturer
+90s to allow real-time video processing and advanced computer graphics for video games. Each processor manufacturer
 has implemented its own SIMD instruction set:</p>
 
 <ul>
@@ -3768,7 +3767,7 @@ has implemented its own SIMD instruction set:</p>
 </ul>
 
 <p>Many of these instruction sets still coexist nowadays, and you have to deal with all of them if you want to write portable
-software. This is a first argument for writing wrappers: capture the abstraction of SIMD operations in nice interfaces,
+software. This is a first argument for writing wrappers: capture the abstraction of SIMD operations with nice interfaces,
 and forget about the implementation you rely on.</p>
 
 <p>Although you can write assembly code to use the SIMD instructions, compilers usually provide built-in functions so you
@@ -3779,7 +3778,7 @@ same SIMD instruction set. Fortunately, compilers tend to standardize intrinsics
 and we only have to handle the differences between the various SIMD instruction sets.</p>
 
 <p>In this series of article, the focus will be on wrapping Intel’s SIMD instruction set, although the wrappers will be generic
-enough so that plugging other instruction set is easy.</p>
+enough so that plugging other instruction sets is easy.</p>
 
 <p>Since SIMD instructions are longstanding, you might wonder if writing your own wrapper is relevant; maybe you could reuse
 an existing library wrapping these intrinsics. Well, it depends on your needs.</p>
@@ -3788,12 +3787,12 @@ an existing library wrapping these intrinsics. Well, it depends on your needs.</
 instruction set (different versions of SSE and AVX), but he doesn’t make heavy use of metaprogramming in his
 implementation. Hence adding a new wrapper (for a new instruction set, a new version of an existing one or even for
 your own numerical types)  requires to type a lot of code that could otherwise have been factorized. Moreover, some essential
-tools are missing, such as an aligned memory allocator (we’ll see why you need such a tool later). However his library is
-a good point to start.</p>
+tools are missing, such as an aligned memory allocator (we will see why you need such a tool later). However his library is
+a good starting point.</p>
 
 <p>Another library you might want to consider is the <a href="https://github.com/MetaScale/nt2">Numerical Template Toolbox</a>.
 Although it has a very comprehensive set of mathematical functions, its major drawback is that it really slows the
-compilation. More over its development and documentation aren’t finished yet, and it might be difficult to extend it.</p>
+compilation. Moreover its development and documentation aren’t finished yet, and it might be difficult to extend it.</p>
 
 <p>And last but not least, writing your own wrapper will make you confront issues specific to SIMD instructions
 and make you understand how it works; thus you will be able to use SIMD intrinsics in a really efficient way, regardless

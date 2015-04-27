@@ -9,7 +9,8 @@
   <meta name="author" content="Johan Mabille">
 
   
-  <meta name="description" content="1. SSE/AVX intrinsics Before we start to write any code, we need to take a look at the instrinsics the compiler provides, and how things are &hellip;">
+  <meta name="description" content="1. SSE/AVX intrinsics Before we start writing any code, we need to take a look at the instrinsics provided with the compiler. Henceforth, I
+assume we &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -106,11 +107,11 @@
 
 <div class="entry-content"><h2 id="a-namesection1a1-sseavx-intrinsics"><a name="section_1"></a>1. SSE/AVX intrinsics</h2>
 
-<p>Before we start to write any code, we need to take a look at the instrinsics the compiler provides, and how things are
-organized. For the rest of this article and the following ones, I assume we use an Intel processor, recent enough to
-provide SSE 4 and AVX; the compiler can be gcc or MSVC, the instrinsics they provide are almost the same.</p>
+<p>Before we start writing any code, we need to take a look at the instrinsics provided with the compiler. Henceforth, I
+assume we use an Intel processor, recent enough to provide SSE 4 and AVX instruction sets; the compiler can be gcc or
+MSVC, the instrinsics they provide are almost the same.</p>
 
-<p>If you already know about SSE / AVX intrinsics you can skip this section.
+<p>If you already know about SSE / AVX intrinsics you may skip this section.
 <!-- more --></p>
 
 <h3 id="registers">1.1 Registers</h3>
@@ -126,8 +127,8 @@ registers can still be addressed since they’re the lower part of ymm registers
 
 <h3 id="files-to-include">1.2 Files to include</h3>
 
-<p>The intrinsic functions are splitted among different files, depending on the version of the SIMD instruction set they
-belong to :</p>
+<p>Intrinsic functions are made available in different header files, based on the version of the SIMD instruction set they
+belong to:</p>
 
 <ul>
   <li>&lt;xmmintrin.h&gt; : SSE, operations on 4 single precision floating point numbers (float).</li>
@@ -140,12 +141,12 @@ belong to :</p>
 </ul>
 
 <p>Each of these files includes the previous one, so you only have to include the one matching the highest version of the SIMD
-instruction set available in your processor. Later we’ll see how to detect at compile time which version on SIMD instruction
+instruction set available in your processor. Later we will see how to detect at compile time which version on SIMD instruction
 set is available and thus which file to include. For now, just assume we’re able to include the right file each time we need it.</p>
 
 <h3 id="naming-rules">1.3 Naming rules</h3>
 
-<p>Now if you take a look at these files, you’ll notice provided data and functions follow some naming rules :</p>
+<p>Now if you take a look at these files, you will notice provided data and functions follow some naming rules :</p>
 
 <ul>
   <li>data vectors are named <strong>__mXXX(T)</strong>, where :
@@ -157,7 +158,7 @@ set is available and thus which file to include. For now, just assume we’re ab
   </li>
   <li>intrinsic functions operating on floating point numbers are usually named <strong>_mm(XXX)_NAME_PT</strong>, where :
     <ul>
-      <li>XXX is the number of bits of the SIMD registers; it is omitted for 128 bits regusters</li>
+      <li>XXX is the number of bits of the SIMD registers; it is omitted for 128 bits registers</li>
       <li>NAME is the short name of the function (add, sub, cmp, …)</li>
       <li>P indicates whether the functions operates on a packed data vector (p) or on a scalar only (s)</li>
       <li>T indicates the type of the floating point numbers : s for single precision, d for double precision</li>
@@ -186,7 +187,7 @@ set is available and thus which file to include. For now, just assume we’re ab
   <li>Setting : _mm_set_xx, _mm_setzero_xx, …</li>
 </ul>
 
-<p>Some intrinsics won’t be wrapped, and some of them will bu used only to build higher level functions in the wrappers.</p>
+<p>I will not provide wrappers for all intrinsics,  and some of them will be used only to build higher level functions in the wrappers.</p>
 
 <h3 id="sample-code">1.5 Sample code</h3>
 
@@ -218,7 +219,7 @@ change your mind :</p>
  </figure></notextile></div>
 
 <p>Quite hard to read, right ? And this is just for two multiplications and one addition; imagine using intrinsics in a huge amount of code,
-and you’ll get code really hard to understand and to maintain. What we need is a way to use __m128 with traditional arithmetic
+and you will get code really hard to understand and to maintain. What we need is a way to use __m128 with traditional arithmetic
 operators, as we do with float :</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>wrapped_sample.cpp </span></figcaption>

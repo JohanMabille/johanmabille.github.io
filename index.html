@@ -161,7 +161,7 @@ performances. They raised many possible performance hits in the implementation:<
   <li>Arguments passed by const references instead of values, introducing a useless indirection and preventing the compiler from
 keeping the variable into registers</li>
   <li>Indirection due to the wrapping of __mXXX types into objects</li>
-  <li>Operator overloads preventing the compiler from proper instructions reordering during optimization</li>
+  <li>Operator overloads preventing the compiler from proper instruction reordering during optimization</li>
 </ul>
 
 </div>
@@ -358,11 +358,11 @@ std::vector&lt;<span class="predefined-type">float</span>&gt; a, b, c, d, e;
 
   <div class="entry-content"><h2 id="a-namesection2a2-first-version-of-wrappers"><a name="section_2"></a>2. First version of wrappers</h2>
 
-<p>Now that we know a little more about SSE and AVX, let’s start writing code; the wrappers will have
-a data vector member and provide arithmetic, comparison and logical operators overloads. Through this
-section, I will mainly focus on vector4f, the wrapper around __m128, but translating the code for
-other data vectors should not be difficult thanks to the previous section. Since the wrappers will be
-used as numerical types, they must have value semantics, that is they must define copy constructor,
+<p>Now that we know a little more about SSE and AVX, let’s write some  code; the wrappers will have
+a data vector member and provide arithmetic, comparison and logical operators overloads. Throughout
+this section, I will mainly focus on vector4f, the wrapper around __m128, but translating the code
+for other data vectors should not be difficult thanks to the previous section. Since the wrappers will
+be used as numerical types, they must have value semantics, that is they must define copy constructor,
 assignment operator and non-virtual destructor.</p>
 
 </div>
@@ -406,11 +406,11 @@ assignment operator and non-virtual destructor.</p>
 
   <div class="entry-content"><h2 id="a-namesection1a1-sseavx-intrinsics"><a name="section_1"></a>1. SSE/AVX intrinsics</h2>
 
-<p>Before we start to write any code, we need to take a look at the instrinsics the compiler provides, and how things are
-organized. For the rest of this article and the following ones, I assume we use an Intel processor, recent enough to
-provide SSE 4 and AVX; the compiler can be gcc or MSVC, the instrinsics they provide are almost the same.</p>
+<p>Before we start writing any code, we need to take a look at the instrinsics provided with the compiler. Henceforth, I
+assume we use an Intel processor, recent enough to provide SSE 4 and AVX instruction sets; the compiler can be gcc or
+MSVC, the instrinsics they provide are almost the same.</p>
 
-<p>If you already know about SSE / AVX intrinsics you can skip this section.
+<p>If you already know about SSE / AVX intrinsics you may skip this section.
 </div>
   
   
@@ -454,10 +454,10 @@ provide SSE 4 and AVX; the compiler can be gcc or MSVC, the instrinsics they pro
 
 <p>SIMD (and more generally vectorization) is a longstanding topic and a lot has been written about it. But
 when I had to use it in my own applications, it appeared that most of the articles were theoretical,
-explaining the principles of the vectorization without practical examples of application; some of them,
-however, linked to libraries using vectorization, but extending these libraries for my personal needs was
-difficult, if not painfull. For this reason, I decided to implement my own library. This series of articles
-if the result of my work on the matter. I share it there in case someone faces the same problem.</p>
+explaining the principles vectorization lacking practical examples; some of them, however, linked to
+libraries using vectorization, but extending these libraries for my personal needs was difficult, if not
+painfull. For this reason, I decided to implement my own library. This series of articles if the result
+of my work on the matter. I share it there in case someone faces the same problem.</p>
 
 </div>
   
