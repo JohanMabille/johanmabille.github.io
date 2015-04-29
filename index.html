@@ -111,7 +111,7 @@
 
 <p>In a previous <a href="http://jmabille.github.io/blog/2014/10/13/writing-c-plus-plus-wrappers-for-simd-intrinsics-4/#simd_memory_allocator">article about SIMD wrappers</a>, I suggested to design a dedicated memory allocator to handle SIMD memory alignment constraints, but I didn’t give
 any details on how to do it. That’s the purpose of this article. The C++ standard describes a set of requirements our allocator must respect
-so it can work with standard containers. After a survey of these standard requirements, we’ll see how to implement an aligned memory allocator
+to work with standard containers. After a survey of these standard requirements, we’ll see how to implement an aligned memory allocator
 that meets them.</p>
 
 </div>
@@ -289,8 +289,8 @@ std::vector&lt;<span class="predefined-type">float</span>&gt; a, b, c, d, e
 
 <h3 id="storing-vector4f-instead-of-float">3.1 Storing vector4f instead of float</h3>
 
-<p>Now we have nice wrappers, let’s see how we can use them in real code. Suppose you have the following
-computation loop:</p>
+<p>Now that we have nice wrappers, let’s see how we can use them in real code. Consider the following
+loop:</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>sample.cpp </span></figcaption>
  <table class="CodeRay"><tr>

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: SIMD | The C++ scientist]]></title>
   <link href="http://jmabille.github.io/blog/categories/simd/atom.xml" rel="self"/>
   <link href="http://jmabille.github.io/"/>
-  <updated>2015-04-27T09:18:23+02:00</updated>
+  <updated>2015-04-29T23:05:58+02:00</updated>
   <id>http://jmabille.github.io/</id>
   <author>
     <name><![CDATA[Johan Mabille]]></name>
@@ -34,8 +34,7 @@ keeping the variable into registers</li>
 <p>I’ve always thought the compiler was smart enough to handle registers and optimizations, whatever the type of the functions arguments (const
 references or values); and I don’t understand why operators overloads shouldn’t be considered as classical functions by the compiler. But well,
 maybe I am too optimistic about the capabilities of the compiler? I was suggested a solution based on pure functions that should be simpler
-and faster, but I was not given any evidence. Let’s take a closer look at both implementations and the assembly code they generate so we can say
-whether or not the wrappers introduce performance hits.</p>
+and faster, but I was not given any evidence. Let’s take a closer look at both implementations and the assembly code they generate so we can determine whether or not the wrappers introduce performance hits.</p>
 
 <p>Before we go further, here are some technical details: the compiler used in this article is gcc 4.7.3, results may be different with another compiler
 (and I am interested in seeing these results). The SIMD wrappers used are those of the article series mentioned above, and the implementation based
@@ -325,7 +324,7 @@ see if operators overload prevents the compiler from proper instructions reorder
 
 <h2 id="operators-overload">4. Operators overload</h2>
 
-<p>For this test, I use the following functions:</p>
+<p>For this test, I used the following functions:</p>
 
 <p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>simd_test2.cpp </span></figcaption>
  <table class="CodeRay"><tr>
@@ -856,7 +855,7 @@ vector4f test_sse_b(vector4f a, vector4f b, vector4f c, vector4f d)
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>Performance is not an intuitive domain; we have to check any assumption we make, because these assumptions can be legacy of time when compilers were inefficient or buggy, or a bias due to our misunderstood of some mechanisms of the language. Here we’ve seen that neither operator overloads nor constant reference argument instead of value argument introduce any performance issue with GCC, but this might be different with another compiler.</p>
+<p>Performance is not an intuitive domain; we have to check any assumption we make, because these assumptions can be legacy of time when compilers were inefficient or buggy, or a bias due to our misunderstanding of some mechanisms of the language. Here we’ve seen that neither operator overloads nor constant reference argument instead of value argument introduce any performance issue with GCC, but this might be different with another compiler.</p>
 ]]></content>
   </entry>
   
@@ -1129,7 +1128,7 @@ specialization is not possible for functions, let’s wrap them into a simd_func
     <span class="keyword">struct</span> simd_functions_invoker&amp;lt;T,T&amp;gt;
     {
         <span class="directive">inline</span> <span class="directive">static</span> T
-        set1(<span class="directive">const</span> T&amp;amp; a) { <span class="keyword">return</span> V(a); }&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
+        set1(<span class="directive">const</span> T&amp;amp; a) { <span class="keyword">return</span> T(a); }&lt;/<span class="keyword">class</span><span class="error">&gt;</span>&lt;/p&gt;
 
 &lt;pre&gt;&lt;code&gt;    <span class="directive">inline</span> <span class="directive">static</span> T
     load_a(<span class="directive">const</span> T* src) { <span class="keyword">return</span> *src; }
@@ -1213,7 +1212,7 @@ store_u(T* dst, <span class="directive">const</span> <span class="keyword">typen
  </figure></notextile></div></t></t></class></p>
 
 <p>Now we can use these generic functions in the previous loop so it works with any type, even those
-which don’t support vectorization:</p>
+that don’t support vectorization:</p>
 
 <p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>sample.cpp </span></figcaption>
  <table class="CodeRay"><tr>
@@ -1283,7 +1282,7 @@ size_t vec_size = simd_traits&lt;<span class="predefined-type">float</span>&gt;:
 </tr></table>
  </figure></notextile></div></float></float></float></p>
 
-<p>We’ve reached our goal, we can use intrinsics almost as we use float; in a real application code, it is likely
+<p>We’ve reached our goal, we can use intrinsics almost like floats; in a real application code, it is likely
 that you initialize the wrappers through load functions, then perform the computations and finally store the
 results (like in the not concise version of the generic loop); thus the only difference between classical code
 and code with SIMD wrappers is the initialization and storing of wrappers (and eventually the functions signatures
@@ -1292,10 +1291,10 @@ easy to read and to maintain.</p>
 
 <h3 id="detecting-the-supported-instruction-set">4.3 Detecting the supported instruction set</h3>
 
-<p><a name="detecting_instr_set"></a>Until now, we’ve assumed we were able to detect at compile time the available instruction set.
-Let’s see now how to achieve this. Compilers often provide preprocessor tokens depending on the available instruction set, but
+<p><a name="detecting_instr_set"></a>Until now, we’ve assumed we were able to detect at compile time the available instruction sets.
+Let’s see now how to achieve this. Compilers often provide preprocessor tokens depending on the available instruction sets, but
 these tokens may vary from one compiler to another, so we have to standardize that. On most 64-bit compilers, the tokens look
-like <strong>__SSE__</strong> or <strong>__SSE3__</strong>, on 32-bit systems, Microsoft compiler sets the preprocessor token <strong>_M_IX86_FP</strong> to
+like <strong>__SSE__</strong> or <strong>__SSE3__</strong>, on 32-bit systems, Microsoft compilers set the preprocessor token <strong>_M_IX86_FP</strong> to
 1 for SSE (vectorization of float) and 2 for SSE2 (vetorization of double and integers).</p>
 
 <p>Here is how we can standardize that:</p>
@@ -1556,8 +1555,8 @@ you need but this goes beyond the topic of this first series of articles.</p>
 
 <h3 id="storing-vector4f-instead-of-float">3.1 Storing vector4f instead of float</h3>
 
-<p>Now we have nice wrappers, let’s see how we can use them in real code. Suppose you have the following
-computation loop:</p>
+<p>Now that we have nice wrappers, let’s see how we can use them in real code. Consider the following
+loop:</p>
 
 <p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>sample.cpp </span></figcaption>
  <table class="CodeRay"><tr>
@@ -1621,8 +1620,8 @@ additional vector4f in each vector and we initialize the useless elements with 0
 for a specific element in the vector or if you fill your vector pushing back elements one by one. In this
 case, you would have to recode any piece of algorithm that works on single elements (and that includes a
 lot of STL algorithms) and then add special code for working on scalars within a vector4f. Working on
-scalars within vector4f is possible (we’ll see later how to modify our wrappers so we can do ir), but is
-slower than working directly on scalars, thus you could lose the benefits of using vectorization.</p>
+scalars within vector4f is possible (we will see later how to modify our wrappers so that we can do it),
+but is slower than working directly on scalars, thus you could lose the benefits of using vectorization.</p>
 
 <h3 id="initializing-vector4f-from-container-of-float">3.2 Initializing vector4f from container of float</h3>
 
@@ -1843,8 +1842,8 @@ is aligned, and how do we know the boundary alignment?</p>
 
 <p>The answer is that it depends on your system and your compiler. On Windows 64 bits, dynamic memory allocation is 16-bytes aligned;
 in GNU systems, a block returned by malloc or realloc is always a multiple of 8 (32-bit systems) or 16 (64-bit system). So if we
-want to write code generic enough to handle many SIMD instruction set, it’s clear we must provide a way to ensure memory allocation
-is always aligned, and is aligned on a given boundary.</p>
+want to write code generic enough to handle many SIMD instruction sets, it is clear that we must provide a way to ensure memory
+allocation is always aligned, and is aligned on a given boundary.</p>
 
 <p>The solution is to design an aligned memory allocator and to use it in std::vector:</p>
 
@@ -1880,8 +1879,8 @@ std::vector&amp;lt;<span class="predefined-type">float</span>,simd_allocator&amp
 <h3 id="conditional-branch">3.4 Conditional branch</h3>
 
 <p>Another issue we have to deal with, when we plug our wrapper, is conditional branching: indeed the if-else statement evaluates
-a branch depending on the scalar condition, but the if statement works only for scalar condition, and we can’t directly override
-it so it works with our wrappers. Consider the following code:</p>
+a branch depending on the scalar condition, but the if statement works only for scalar condition, and we cannot directly override
+it to work with our wrappers. Consider the following code:</p>
 
 <p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>sample.cpp </span></figcaption>
  <table class="CodeRay"><tr>
@@ -1918,7 +1917,7 @@ std::vector&lt;<span class="predefined-type">float</span>&gt; a,b,c,d,e;
 </tr></table>
  </figure></notextile></div></float></p>
 
-<p>What we do here is selecting a value for e[i] depending on the sign of a[i]; the code could be written in a suboptimal way:</p>
+<p>What we do here is selecting a value for e[i] depending on the sign of a[i]; the code could be written in a sub-optimal way:</p>
 
 <p><div class='bogus-wrapper'><notextile><figure class='code'><figcaption class='code-header' style='margin-bottom:-5px;'><span>sample.cpp </span></figcaption>
  <table class="CodeRay"><tr>
@@ -2025,7 +2024,7 @@ ev.store_a(&amp;amp;e[i]); } <span class="comment">// scalar version for the las
 
 <p>Although this code is far better than using intrinsics directly, it is still very verbose and, worse, not generic. If you want to update
 your code to take advantage of AVX instead of SSE, you need to replace every occurence of vector4f by vector8f, and to change the loop
-condition and increment so it takes into account the size of vector8f. Doing this in real code will quickly become painful.</p>
+condition and increment so as to take into account the size of vector8f. Doing this in real code will quickly become painful.</p>
 
 <p>What we need here is full genericity, so that replacing an instruction set by another requires almost no code change. That the point of
 the next section.</p>

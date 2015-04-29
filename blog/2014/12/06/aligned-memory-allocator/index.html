@@ -108,7 +108,7 @@
 
 <p>In a previous <a href="http://jmabille.github.io/blog/2014/10/13/writing-c-plus-plus-wrappers-for-simd-intrinsics-4/#simd_memory_allocator">article about SIMD wrappers</a>, I suggested to design a dedicated memory allocator to handle SIMD memory alignment constraints, but I didn’t give
 any details on how to do it. That’s the purpose of this article. The C++ standard describes a set of requirements our allocator must respect
-so it can work with standard containers. After a survey of these standard requirements, we’ll see how to implement an aligned memory allocator
+to work with standard containers. After a survey of these standard requirements, we’ll see how to implement an aligned memory allocator
 that meets them.</p>
 
 <!-- more -->
@@ -135,7 +135,7 @@ is done with Allocator&lt;T&gt;::rebind&lt;U&gt;::other.allocate(n).</p>
 and one for constant references.</p>
 
 <p>The two following functions are the essential part of the allocator: <strong>allocate</strong> and <strong>deallocate</strong>, which allocates/deallocates memory for
-n objects of type T. These functions are low level memory management functions and are not responsible for constructing or destroying objects,
+n objects of type T. These functions are low-level memory management functions and are not responsible for constructing or destroying objects,
 this has to be done in specific functions: <strong>construct</strong> and <strong>destroy</strong>.</p>
 
 <p>The last specific function is <strong>max_size</strong>, a function that returns the maximum value that can be passed to allocate.</p>
@@ -144,7 +144,7 @@ this has to be done in specific functions: <strong>construct</strong> and <stron
 
 <h2 id="aligned-memory-allocator-interface">2. Aligned memory allocator interface</h2>
 
-<p>Since we must handle different memory alignment bound, our aligned memory allocator will take two template parameters: <strong>T</strong>, the type of allocated
+<p>Since we must handle different memory alignment bounds, our aligned memory allocator will take two template parameters: <strong>T</strong>, the type of allocated
 objects, and <strong>N</strong>, the aligment bound. Given the requirements of the previous section, the allocator interface looks like:</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption class="code-header" style="margin-bottom:-5px;"><span>aligned_allocator.hpp </span></figcaption>
@@ -434,8 +434,10 @@ selects the aligned memory allocation to use if such a function is available, ot
 </tr></table>
  </figure></notextile></div>
 
-<p>Here we see the advantage to have encapsulated aligned memory allocation selection in a dedicated function: the allocate function of the allocator simply forwards to this dedicated function and then handles possible bad allocation. The result is a code simple and easy to read. Another advantage is you can
-use <strong>aligned_malloc</strong> and <strong>aligned_free</strong> functions outside the <strong>aligned_allocator</strong> class if you need.</p>
+<p>Here we see the advantage to have encapsulated aligned memory allocation selection in a dedicated function: the allocate function of the
+allocator simply forwards to this dedicated function and then handles possible bad allocation. The result is a simple and easy-to-read
+code. Another advantage is that you can use <strong>aligned_malloc</strong> and <strong>aligned_free</strong> functions outside the <strong>aligned_allocator</strong> class if
+you need.</p>
 
 <p>Note: the call to malloc after the MALLOC_ALREADY_ALIGNED preprocessor token should be available for 16-bytes aligned memory allocator only (the same applies to the call to free). Thus we should provide two versions of <strong>aligned_malloc</strong> and <strong>aligned_free</strong> and a specialization of the allocator ofr
 <strong>N = 16</strong>.</p>
@@ -594,7 +596,7 @@ vector_type v1,v2,v3;
 </tr></table>
  </figure></notextile></div>
 
-<p>But as we’ll see in a next article, std::vector may not be the more appropriate container for fast computation programs.</p>
+<p>But as we will see in a forthcoming article, std::vector may not be the most appropriate container for efficient numerical analysis.</p>
 </div>
 
 
