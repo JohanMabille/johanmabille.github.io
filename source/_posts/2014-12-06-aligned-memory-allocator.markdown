@@ -11,7 +11,7 @@ published: true
 
 In a previous [article about SIMD wrappers](http://jmabille.github.io/blog/2014/10/13/writing-c-plus-plus-wrappers-for-simd-intrinsics-4/#simd_memory_allocator), I suggested to design a dedicated memory allocator to handle SIMD memory alignment constraints, but I didn't give
 any details on how to do it. That's the purpose of this article. The C++ standard describes a set of requirements our allocator must respect
-so it can work with standard containers. After a survey of these standard requirements, we'll see how to implement an aligned memory allocator
+to work with standard containers. After a survey of these standard requirements, we'll see how to implement an aligned memory allocator
 that meets them.
 
 <!-- more -->
@@ -36,7 +36,7 @@ Then we have to provide the **address** functions, which return the address of a
 and one for constant references.
 
 The two following functions are the essential part of the allocator: **allocate** and **deallocate**, which allocates/deallocates memory for
-n objects of type T. These functions are low level memory management functions and are not responsible for constructing or destroying objects,
+n objects of type T. These functions are low-level memory management functions and are not responsible for constructing or destroying objects,
 this has to be done in specific functions: **construct** and **destroy**.
 
 The last specific function is **max_size**, a function that returns the maximum value that can be passed to allocate.
@@ -45,7 +45,7 @@ Finally, the allocator must provide default and copy constructors, and equality 
 
 ##2. Aligned memory allocator interface
 
-Since we must handle different memory alignment bound, our aligned memory allocator will take two template parameters: **T**, the type of allocated
+Since we must handle different memory alignment bounds, our aligned memory allocator will take two template parameters: **T**, the type of allocated
 objects, and **N**, the aligment bound. Given the requirements of the previous section, the allocator interface looks like:
 
 {% coderay lang:cpp aligned_allocator.hpp %}
@@ -195,8 +195,10 @@ template <class T, int N>
     }
 {% endcoderay %}
 
-Here we see the advantage to have encapsulated aligned memory allocation selection in a dedicated function: the allocate function of the allocator simply forwards to this dedicated function and then handles possible bad allocation. The result is a code simple and easy to read. Another advantage is you can
-use **aligned_malloc** and **aligned_free** functions outside the **aligned_allocator** class if you need.
+Here we see the advantage to have encapsulated aligned memory allocation selection in a dedicated function: the allocate function of the
+allocator simply forwards to this dedicated function and then handles possible bad allocation. The result is a simple and easy-to-read
+code. Another advantage is that you can use **aligned_malloc** and **aligned_free** functions outside the **aligned_allocator** class if
+you need.
 
 Note: the call to malloc after the MALLOC\_ALREADY\_ALIGNED preprocessor token should be available for 16-bytes aligned memory allocator only (the same applies to the call to free). Thus we should provide two versions of **aligned\_malloc** and **aligned\_free** and a specialization of the allocator ofr
 **N = 16**.
@@ -278,4 +280,4 @@ for(size_t i = 0; i < v1.size(); i += simd_traits<double>::size)
 }
 {% endcoderay %}
 
-But as we'll see in a next article, std::vector may not be the more appropriate container for fast computation programs.
+But as we will see in a forthcoming article, std::vector may not be the most appropriate container for efficient numerical analysis.

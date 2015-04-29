@@ -20,8 +20,7 @@ keeping the variable into registers
 I've always thought the compiler was smart enough to handle registers and optimizations, whatever the type of the functions arguments (const
 references or values); and I don't understand why operators overloads shouldn't be considered as classical functions by the compiler. But well,
 maybe I am too optimistic about the capabilities of the compiler? I was suggested a solution based on pure functions that should be simpler
-and faster, but I was not given any evidence. Let's take a closer look at both implementations and the assembly code they generate so we can say
-whether or not the wrappers introduce performance hits.
+and faster, but I was not given any evidence. Let's take a closer look at both implementations and the assembly code they generate so we can determine whether or not the wrappers introduce performance hits.
 
 Before we go further, here are some technical details: the compiler used in this article is gcc 4.7.3, results may be different with another compiler
 (and I am interested in seeing these results). The SIMD wrappers used are those of the article series mentioned above, and the implementation based
@@ -181,7 +180,7 @@ see if operators overload prevents the compiler from proper instructions reorder
 
 ##4. Operators overload
 
-For this test, I use the following functions:
+For this test, I used the following functions:
 
 {% coderay simd_test2.cpp %}
 vector4f2 test_sse_b2(vector4f2 a, vector4f2 b, vector4f2 c, vector4f2 d)
@@ -449,4 +448,4 @@ This is much less elegant, but it comes with the guarantee that there won't be a
 
 ## Conclusion
 
-Performance is not an intuitive domain; we have to check any assumption we make, because these assumptions can be legacy of time when compilers were inefficient or buggy, or a bias due to our misunderstood of some mechanisms of the language. Here we've seen that neither operator overloads nor constant reference argument instead of value argument introduce any performance issue with GCC, but this might be different with another compiler.
+Performance is not an intuitive domain; we have to check any assumption we make, because these assumptions can be legacy of time when compilers were inefficient or buggy, or a bias due to our misunderstanding of some mechanisms of the language. Here we've seen that neither operator overloads nor constant reference argument instead of value argument introduce any performance issue with GCC, but this might be different with another compiler.

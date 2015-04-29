@@ -10,8 +10,8 @@ categories: [SIMD,Vectorization]
 
 ### 3.1 Storing vector4f instead of float
 
-Now we have nice wrappers, let's see how we can use them in real code. Suppose you have the following
-computation loop:
+Now that we have nice wrappers, let's see how we can use them in real code. Consider the following
+loop:
 
 {% coderay sample.cpp %}
 std::vector<float> a, b, c, d, e;
@@ -47,8 +47,8 @@ The problem is you could need to work with the scalar instead of the vector4f, f
 for a specific element in the vector or if you fill your vector pushing back elements one by one. In this
 case, you would have to recode any piece of algorithm that works on single elements (and that includes a
 lot of STL algorithms) and then add special code for working on scalars within a vector4f. Working on
-scalars within vector4f is possible (we'll see later how to modify our wrappers so we can do ir), but is
-slower than working directly on scalars, thus you could lose the benefits of using vectorization.
+scalars within vector4f is possible (we will see later how to modify our wrappers so that we can do it),
+but is slower than working directly on scalars, thus you could lose the benefits of using vectorization.
 
 ### 3.2 Initializing vector4f from container of float
 
@@ -181,8 +181,8 @@ is aligned, and how do we know the boundary alignment?
 
 The answer is that it depends on your system and your compiler. On Windows 64 bits, dynamic memory allocation is 16-bytes aligned;
 in GNU systems, a block returned by malloc or realloc is always a multiple of 8 (32-bit systems) or 16 (64-bit system). So if we
-want to write code generic enough to handle many SIMD instruction set, it's clear we must provide a way to ensure memory allocation
-is always aligned, and is aligned on a given boundary.
+want to write code generic enough to handle many SIMD instruction sets, it is clear that we must provide a way to ensure memory
+allocation is always aligned, and is aligned on a given boundary.
 
 The solution is to design an aligned memory allocator and to use it in std::vector:
 
@@ -201,8 +201,8 @@ typedef aligned_allocator<32> simd_allocator_avx; // AVX
 ### 3.4 Conditional branch
 
 Another issue we have to deal with, when we plug our wrapper, is conditional branching: indeed the if-else statement evaluates
-a branch depending on the scalar condition, but the if statement works only for scalar condition, and we can't directly override
-it so it works with our wrappers. Consider the following code:
+a branch depending on the scalar condition, but the if statement works only for scalar condition, and we cannot directly override
+it to work with our wrappers. Consider the following code:
 
 {% coderay sample.cpp %}
 std::vector<float> a,b,c,d,e;
@@ -220,7 +220,7 @@ for(size_t i = 0; i < a.size(); ++i)
 }
 {% endcoderay %}
 
-What we do here is selecting a value for e[i] depending on the sign of a[i]; the code could be written in a suboptimal way:
+What we do here is selecting a value for e[i] depending on the sign of a[i]; the code could be written in a sub-optimal way:
 
 {% coderay sample.cpp %}
 float select(bool cond, float v1, float v2)
@@ -281,7 +281,7 @@ for(size_t i = 0; i < n/4; i+=4)
 
 Although this code is far better than using intrinsics directly, it is still very verbose and, worse, not generic. If you want to update
 your code to take advantage of AVX instead of SSE, you need to replace every occurence of vector4f by vector8f, and to change the loop
-condition and increment so it takes into account the size of vector8f. Doing this in real code will quickly become painful.
+condition and increment so as to take into account the size of vector8f. Doing this in real code will quickly become painful.
 
 What we need here is full genericity, so that replacing an instruction set by another requires almost no code change. That the point of
 the next section.

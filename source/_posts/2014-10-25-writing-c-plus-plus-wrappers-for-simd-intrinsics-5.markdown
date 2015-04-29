@@ -147,7 +147,7 @@ template <class T>
 	struct simd_functions_invoker<T,T>
 	{
 		inline static T
-		set1(const T& a) { return V(a); }
+		set1(const T& a) { return T(a); }
 
 		inline static T
 		load_a(const T* src) { return *src; }
@@ -196,7 +196,7 @@ store_u(T* dst, const typename simd_traits<T>::type& src)
 {% endcoderay %}
 
 Now we can use these generic functions in the previous loop so it works with any type, even those
-which don't support vectorization:
+that don't support vectorization:
 
 {% coderay sample.cpp %}
 std::vector<float> a,b,c,d,e;
@@ -233,7 +233,7 @@ for(size_t i = 0; i < n/vec_size; i += vec_size)
 // ...
 {% endcoderay %}
 
-We've reached our goal, we can use intrinsics almost as we use float; in a real application code, it is likely
+We've reached our goal, we can use intrinsics almost like floats; in a real application code, it is likely
 that you initialize the wrappers through load functions, then perform the computations and finally store the
 results (like in the not concise version of the generic loop); thus the only difference between classical code
 and code with SIMD wrappers is the initialization and storing of wrappers (and eventually the functions signatures
@@ -242,10 +242,10 @@ easy to read and to maintain.
 
 ### 4.3 Detecting the supported instruction set
 
-<a name="detecting_instr_set"></a>Until now, we've assumed we were able to detect at compile time the available instruction set.
-Let's see now how to achieve this. Compilers often provide preprocessor tokens depending on the available instruction set, but
+<a name="detecting_instr_set"></a>Until now, we've assumed we were able to detect at compile time the available instruction sets.
+Let's see now how to achieve this. Compilers often provide preprocessor tokens depending on the available instruction sets, but
 these tokens may vary from one compiler to another, so we have to standardize that. On most 64-bit compilers, the tokens look
-like **\_\_SSE\_\_** or **\_\_SSE3\_\_**, on 32-bit systems, Microsoft compiler sets the preprocessor token **\_M\_IX86\_FP** to
+like **\_\_SSE\_\_** or **\_\_SSE3\_\_**, on 32-bit systems, Microsoft compilers set the preprocessor token **\_M\_IX86\_FP** to
 1 for SSE (vectorization of float) and 2 for SSE2 (vetorization of double and integers).
 
 Here is how we can standardize that:
